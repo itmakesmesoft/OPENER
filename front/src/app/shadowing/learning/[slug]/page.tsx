@@ -105,38 +105,30 @@ const page = ({ params }: { params: { slug: string } }) => {
   const nextCaption = (): void => {
     const index = findCurrentCaptionIndex();
     const videoRef = videoInfoRef.current;
-    if (videoRef) {
-      if (index !== -1 && index < videoRef.engCaption.length - 1) {
-        if (state.repeat) videoRef.repeatIndex = index + 1;
-        playerRef.current.seekTo(
-          videoRef.engCaption[index + 1].startTime,
-          true,
-        );
-      } else {
-        playerRef.current.seekTo(
-          videoRef.engCaption[videoRef.currentCapIndex + 1].startTime,
-          true,
-        );
-      }
+    if (!videoRef) return;
+    if (index !== -1 && index < videoRef.engCaption.length - 1) {
+      if (state.repeat) videoRef.repeatIndex = index + 1;
+      playerRef.current.seekTo(videoRef.engCaption[index + 1].startTime, true);
+    } else {
+      playerRef.current.seekTo(
+        videoRef.engCaption[videoRef.currentCapIndex + 1].startTime,
+        true,
+      );
     }
   };
 
   const prevCaption = (): void => {
     const index = findCurrentCaptionIndex();
     const videoRef = videoInfoRef.current;
-    if (videoRef) {
-      if (index !== -1 && index > 0) {
-        if (state.repeat) videoRef.repeatIndex = index - 1;
-        playerRef.current.seekTo(
-          videoRef.engCaption[index - 1].startTime,
-          true,
-        );
-      } else {
-        playerRef.current.seekTo(
-          videoRef.engCaption[videoRef.currentCapIndex].startTime,
-          true,
-        );
-      }
+    if (!videoRef) return;
+    if (index !== -1 && index > 0) {
+      if (state.repeat) videoRef.repeatIndex = index - 1;
+      playerRef.current.seekTo(videoRef.engCaption[index - 1].startTime, true);
+    } else {
+      playerRef.current.seekTo(
+        videoRef.engCaption[videoRef.currentCapIndex].startTime,
+        true,
+      );
     }
   };
 
