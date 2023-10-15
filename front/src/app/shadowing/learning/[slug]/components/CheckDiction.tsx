@@ -1,7 +1,4 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
-import { BsChevronLeft, BsMic } from 'react-icons/bs';
-import { AiOutlinePause } from 'react-icons/ai';
 import {
   SpeechConfig,
   SpeechRecognizer,
@@ -9,69 +6,74 @@ import {
   PropertyId,
   PronunciationAssessmentConfig,
 } from 'microsoft-cognitiveservices-speech-sdk';
-import { Chart } from './chart';
+import Chart from './Chart';
+import { AiOutlinePause } from 'react-icons/ai';
+import { BsChevronLeft, BsMic } from 'react-icons/bs';
+import React, { useState, useRef, useEffect, MutableRefObject } from 'react';
 
-const CheckDiction = (props: any) => {
-  console.log(props.engCaption);
+const CheckDiction = (props: {
+  playerRef: any;
+  countDown: number;
+  engCaption: string | undefined;
+  showCountdownRef: MutableRefObject<boolean>;
+  setCountDown: (param: number) => void;
+  checkDiction: (param: boolean) => void;
+}) => {
   const [assessmentResult, setAssessmentResult] = useState<any>();
-
-  const backBtn = () => {
-    props.setCheckDiction(false);
-    props.showCountRef.current = false;
-    props.isRepeatRef.current = false;
-    props.playerRef.current?.playVideo().unMute();
-  };
-
   const [isRecording, setIsRecording] = useState<boolean>(false);
 
-  const context = {
-    referenceText: props.engCaption,
-    gradingSystem: 'HundredMark',
-    granularity: 'Phoneme',
-    phonemeAlphabet: 'IPA',
-    nBestPhonemeCount: 5,
+  const backBtn = () => {
+    props.checkDiction(false);
+    props.showCountdownRef.current = false;
   };
 
   // Cognitive Services 계정 정보 <================================ 숨겨야함
   const subscriptionKey = process.env.NEXT_PUBLIC_AZURE_API;
   const serviceRegion = 'eastus';
-
   const speechConfig = SpeechConfig.fromSubscription(
     subscriptionKey!,
     serviceRegion!,
   );
   const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
-
   let recognizer: SpeechRecognizer | undefined;
   const recognizerRef = useRef<SpeechRecognizer | undefined>(recognizer);
   let timer: any;
-  const start = () => {
+  const standByRecord = () => {
     // 3초 타이머
     setAssessmentResult(undefined);
     setIsRecording(true);
-    props.setSecond(3);
-    props.playerRef.current
-      ?.mute()
-      .seekTo(props.subRangeRef.current?.start, true)
-      .pauseVideo();
-    props.showCountRef.current = true;
     let second = 3;
     timer = setInterval(() => {
       second -= 1;
-      props.setSecond(second);
-      if (!props.showCountRef.current) {
+      props.setCountDown(second);
+      if (!props.showCountdownRef.current) {
         clearInterval(timer);
       } else if (second < 1) {
         Record();
-        props.playerRef.current?.playVideo();
-        props.showCountRef.current = false;
+        props.showCountdownRef.current = false;
         clearInterval(timer);
       }
     }, 1000);
   };
+
+  useEffect(() => {
+    standByRecord();
+    return () => {
+      clearInterval(timer); // timer 종료
+      recognizerRef.current?.stopContinuousRecognitionAsync();
+    };
+  }, []);
+
   const Record = () => {
+    props.playerRef.current.playVideo();
     const config = PronunciationAssessmentConfig.fromJSON(
-      JSON.stringify(context),
+      JSON.stringify({
+        referenceText: props.engCaption,
+        gradingSystem: 'HundredMark',
+        granularity: 'Phoneme',
+        phonemeAlphabet: 'IPA',
+        nBestPhonemeCount: 5,
+      }),
     );
     recognizer = new SpeechRecognizer(speechConfig, audioConfig);
     config.applyTo(recognizer);
@@ -92,7 +94,6 @@ const CheckDiction = (props: any) => {
         aassessment: {},
         list: list,
       });
-      // console.log(`인식된 글자 : ${e.result.text}`);
     };
     recognizer.recognized = (s, e) => {
       const res = e.result.properties.getProperty(
@@ -100,98 +101,94 @@ const CheckDiction = (props: any) => {
       );
       if (recognizer) {
         result(JSON.parse(res));
-        stop();
+        stopRecord();
       }
     };
     recognizer.sessionStopped = () => {
       if (recognizer) {
         recognizer.close();
         recognizer = undefined;
-        console.log('close');
-        // setIsRecording(false);
       }
     };
     recognizer.startContinuousRecognitionAsync();
   };
 
-  const stop = () => {
+  const stopRecord = () => {
     if (recognizerRef.current) {
       recognizerRef.current.stopContinuousRecognitionAsync();
       setIsRecording(false);
-      props.showCountRef.current = false;
+      props.showCountdownRef.current = false;
       props.playerRef.current?.playVideo();
     }
   };
 
-  useEffect(() => {
-    start();
+  const checkCommonWords = (script: any, Lexical: any, res: any) => {
+    // caption과 Lexical 비교 =>  최장공통부분수열 LCS(Longest Common Subsequence)
+    // 1. 2차원 배열 초기화
+    const reg = /[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/gim;
+    const caption = script.replace(reg, '');
+    const n = caption.length;
+    const m = Lexical.length;
+    const arr = Array(n + 1)
+      .fill(0)
+      .map(() => Array(m + 1).fill(0));
 
-    return () => {
-      recognizerRef.current?.stopContinuousRecognitionAsync();
+    // 2. 2차원 배열 순회하며 비교 후 배열 채우기
+    for (let i = 1; i <= n; i++) {
+      for (let j = 1; j <= m; j++) {
+        if (caption[i - 1].toLowerCase() === Lexical[j - 1].toLowerCase()) {
+          arr[i][j] = arr[i - 1][j - 1] + 1;
+        } else {
+          arr[i][j] = Math.max(arr[i - 1][j], arr[i][j - 1]);
+        }
+      }
+    }
+    // 3. 공통되는 부분 추적
+    let i = n;
+    let j = m;
+    const resCaptionIdx: number[] = []; // caption 리스트에서 Lexical의 단어와 일치하는 단어를 담을 인덱스
+    while (arr[i][j] > 0) {
+      if (arr[i][j] === arr[i][j - 1]) {
+        j -= 1;
+      } else if (arr[i][j] === arr[i - 1][j]) {
+        i -= 1;
+      } else {
+        resCaptionIdx.push(i - 1);
+        i -= 1;
+        j -= 1;
+      }
+    }
+    const recognized = []; // 단어의 발음 정보를 담는 배열
+    for (let i = 0; i < n; i++) {
+      const info = {
+        index: i,
+        word: caption[i],
+        isPron: false,
+        pronunciationAssessment: undefined,
+      };
+      if (resCaptionIdx.includes(i)) {
+        const word = res.Words.splice(0, 1)[0];
+        info.isPron = true;
+        info.pronunciationAssessment = word.PronunciationAssessment;
+      }
+      recognized.push(info);
+    }
+    const r = resCaptionIdx.length;
+    const assessment = {
+      accuracy: (res.PronunciationAssessment.AccuracyScore * r) / n,
+      fluency: (res.PronunciationAssessment.FluencyScore * r) / n,
+      completeness: (res.PronunciationAssessment.CompletenessScore * r) / n,
+      pron: (res.PronunciationAssessment.PronScore * r) / n,
     };
-  }, []);
+    return [assessment, recognized];
+  };
 
   const result = async (result: any) => {
     if (props.engCaption && result.RecognitionStatus === 'Success') {
       const res = result.NBest[0];
       const Lexical = res.Lexical.split(' ');
       const caption = props.engCaption.split(' ');
-      // caption과 Lexical 비교 =>  최장공통부분수열 LCS(Longest Common Subsequence)
-      // 1. 2차원 배열 초기화
-      const n = caption.length;
-      const m = Lexical.length;
-      const arr = Array(n + 1)
-        .fill(0)
-        .map(() => Array(m + 1).fill(0));
-
-      // 2. 2차원 배열 순회하며 비교 후 배열 채우기
-      for (let i = 1; i <= n; i++) {
-        for (let j = 1; j <= m; j++) {
-          if (caption[i - 1].toLowerCase() === Lexical[j - 1].toLowerCase()) {
-            arr[i][j] = arr[i - 1][j - 1] + 1;
-          } else {
-            arr[i][j] = Math.max(arr[i - 1][j], arr[i][j - 1]);
-          }
-        }
-      }
-
-      // 3. 공통되는 부분 추적
-      let i = n;
-      let j = m;
-      const resCaptionIdx: number[] = []; // caption 리스트에서 Lexical의 단어와 일치하는 단어를 담을 인덱스
-      while (arr[i][j] > 0) {
-        if (arr[i][j] === arr[i][j - 1]) {
-          j -= 1;
-        } else if (arr[i][j] === arr[i - 1][j]) {
-          i -= 1;
-        } else {
-          resCaptionIdx.push(i - 1);
-          i -= 1;
-          j -= 1;
-        }
-      }
-      const recognized = []; // 단어의 발음 정보를 담는 배열
-      for (let i = 0; i < n; i++) {
-        const info = {
-          index: i,
-          word: caption[i],
-          isPron: false,
-          pronunciationAssessment: undefined,
-        };
-        if (resCaptionIdx.includes(i)) {
-          const word = res.Words.splice(0, 1)[0];
-          info.isPron = true;
-          info.pronunciationAssessment = word.PronunciationAssessment;
-        }
-        recognized.push(info);
-      }
-      const r = resCaptionIdx.length;
-      const assessment = {
-        accuracy: (res.PronunciationAssessment.AccuracyScore * r) / n,
-        fluency: (res.PronunciationAssessment.FluencyScore * r) / n,
-        completeness: (res.PronunciationAssessment.CompletenessScore * r) / n,
-        pron: (res.PronunciationAssessment.PronScore * r) / n,
-      };
+      const [assessment, recognized] = checkCommonWords(caption, Lexical, res);
 
       setAssessmentResult({
         assessment: assessment,
@@ -269,14 +266,14 @@ const CheckDiction = (props: any) => {
         <div className="w-full flex flex-col items-center">
           {isRecording ? (
             <button
-              onClick={stop}
+              onClick={stopRecord}
               className="rounded-full bg-[#F0F0F0] hover:bg-[#f7f7f7] active:bg-[#f1f1f1] p-4"
             >
               <AiOutlinePause size={'2rem'} />
             </button>
           ) : (
             <button
-              onClick={start}
+              onClick={standByRecord}
               className="rounded-full bg-[#F0F0F0] hover:bg-[#f7f7f7] active:bg-[#f1f1f1] p-4"
             >
               <BsMic size={'2rem'} />

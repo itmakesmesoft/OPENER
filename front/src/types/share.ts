@@ -83,11 +83,42 @@ export interface sentenceInterface {
 // end of 로드맵 관련 타입
 
 // 쉐도잉 관련 타입
+export type stateType = {
+  videoUrl: string;
+  videoStart: number;
+  videoEnd: number;
+  views: number;
+  marked: boolean;
+  repeat: boolean;
+};
+
+export type videoInfoRef = {
+  videoUrl: string;
+  videoStart: number;
+  videoEnd: number;
+  engCaption: scriptInterface[];
+  korCaption: scriptInterface[];
+  currentCapIndex: number;
+  repeatIndex: number | null;
+  marked: boolean; // 북마크 여부
+  repeat: boolean; // 영상 반복 재생 여부
+};
+
 export interface scriptInterface {
   startTime: number;
   endTime: number;
   text: string;
 }
+
+export type videoInfoType = {
+  start: number;
+  end: number;
+  engCaption: scriptInterface[];
+  korCaption: scriptInterface[];
+  videoUrl: string;
+  marked: boolean | undefined;
+  repeat: boolean;
+};
 
 export interface contentInterface {
   length: number;
@@ -101,12 +132,17 @@ export interface listInterface {
   korSentence: string;
   isMarked: string;
 }
-export interface searchWordInterface {
+export type searchWordType = {
   word: string;
   meaning: string;
   wordType: string;
   level: string;
-}
+};
+
+export type captionType = {
+  eng: string;
+  kor: string;
+};
 
 // end of 쉐도잉 관련 타입
 

@@ -1,13 +1,12 @@
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
 type chartProps = {
   value: string;
 };
 
-export const Chart = ({ value = '0' }: chartProps) => {
+const Chart = ({ value = '0' }: chartProps) => {
   const val: number = parseInt(value);
-  console.log(val);
   return (
     <div className="relative m-2">
       <CircularProgressbar
@@ -46,3 +45,4 @@ export const Chart = ({ value = '0' }: chartProps) => {
     </div>
   );
 };
+export default Chart;
