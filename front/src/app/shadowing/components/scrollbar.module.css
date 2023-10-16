@@ -1,0 +1,7 @@
+.scrollbar_hidden {
+  -ms-overflow-style: none; /* 인터넷 익스플로러 스크롤바 제거 */
+  scrollbar-width: none; /* 파이어폭스 스크롤바 제거 */
+}
+.scrollbar_hidden::-webkit-scrollbar {
+  display: none; /* 크롬, 사파리, 오페라, 엣지 스크롤바 제거 */
+}
