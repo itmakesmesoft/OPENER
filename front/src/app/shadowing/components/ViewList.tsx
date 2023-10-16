@@ -41,7 +41,7 @@ const ViewList = (props: { category: string }) => {
             <div className="flex flex-row w-full items-center justify-between">
               <div className="flex flex-row items-center mr-2 rounded-md min-w-[0px]">
                 <Image
-                  className="w-[100px] sm:w-[130px] lg:w-[160px] h-auto bg-gray-200"
+                  className="w-[100px] sm:w-[130px] lg:w-[160px] h-auto bg-gray-200 flex-none"
                   src="/images/default.png"
                   width="360"
                   height="202"
