@@ -1,6 +1,5 @@
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { captionType, videoInfoRef, searchWordType } from '@/types/share';
-import CaptionComponent from './CaptionComponent';
 import { YouTubePlayer } from 'react-youtube';
 
 const useCaption = (
@@ -9,10 +8,10 @@ const useCaption = (
   checkDict: boolean,
   isShowKorCap: boolean,
 ) => {
-  const [caption, setCaption] = useState<captionType>();
-  const [searchWord, setSearchWord] = useState<searchWordType | null>(null);
   const rAf = useRef<number | null>(null);
-  const throttling = useRef<NodeJS.Timeout | null>(null); // 특정 구간 자막이 없는 경우, 이전 자막 더 보여지도록 스로틀링 적용
+  const reg = /[`~!@#$%^&*()_|+\-=?;:",.<>{}[\]\\/]/gim;
+  const [caption, setCaption] = useState<captionType>();
+  const [searchWord, setSearchWord] = useState<searchWordType | null>(null); // 단어 검색 시, 해당 단어가 담길 상태변수
 
   useEffect(() => {
     ObservePlayer(); // Mount시 Observe 시작
@@ -24,7 +23,6 @@ const useCaption = (
     };
   }, []);
 
-  //----------------------------
   const ObservePlayer = () => {
     const videoInfo = videoInfoRef.current;
     if (videoInfo.repeat || checkDict) {
@@ -52,6 +50,8 @@ const useCaption = (
     return -1;
   };
 
+  // 특정 구간 자막이 없는 경우, 이전 자막 더 보여지도록 스로틀링 적용
+  const throttling = useRef<NodeJS.Timeout | null>(null);
   const setCurrentCaption = () => {
     const videoInfo = videoInfoRef.current;
     const index = findCurrentCaptionIndex();
@@ -66,7 +66,7 @@ const useCaption = (
         throttling.current = null;
       }
     } else {
-      // 스로틀링 적용 -> 자막이 끝나더라도 최소 1초는 더 보여지도록 구현
+      // 스로틀링 적용 => 자막이 끝나더라도 최소 1초는 더 보여지도록 구현
       if (!throttling.current) {
         throttling.current = setTimeout(() => {
           setCaption({
@@ -78,12 +78,48 @@ const useCaption = (
     }
   };
 
+  const searchDict = async (w: string, idx: number) => {
+    const word = w.toLowerCase().replace(reg, '');
+    setSearchWord({
+      index: idx,
+      word: word,
+      meaning: '예문',
+      wordType: '단어',
+      level: '쉬움',
+    });
+    // return await dictionaryApi(word).then((res) => {
+    //   if (res.status === 200) {
+    //     setSearchWord(res.data.data);
+    //   }
+    // });
+  };
+
   const renderCaption = () => (
-    <CaptionComponent
-      isShowKorCap={isShowKorCap}
-      caption={caption}
-      setSearchWord={setSearchWord}
-    />
+    <div className="mt-2 mb-5 min-h-[60px]">
+      <div className="english_subtitle whitespace-pre-wrap text-[1em]">
+        {caption?.eng?.split(' ').map((word: string, index: number) => {
+          return (
+            <span key={index}>
+              <span
+                onClick={() => {
+                  searchDict(word, index);
+                }}
+                className={`cursor-pointer hover:bg-[#e8e8e8]${
+                  searchWord?.index === index &&
+                  searchWord.word === word &&
+                  'text-[#8224ca] font-semibold underline'
+                }`}
+              >
+                {word}
+              </span>{' '}
+            </span>
+          );
+        })}
+      </div>
+      <div className="korean_subtitle text-[0.8em]">
+        <p className="text-[#787878]">{isShowKorCap && caption?.kor}</p>
+      </div>
+    </div>
   );
   return { caption, renderCaption, findCurrentCaptionIndex, searchWord };
 };
