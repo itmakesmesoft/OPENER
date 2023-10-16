@@ -6,7 +6,7 @@ import { useRef, useState, useEffect } from 'react';
 import { YouTubePlayer } from 'react-youtube';
 
 // components
-import CheckDiction from './components/CheckDiction';
+// import CheckDiction from './components/CheckDiction';
 import ArrowButtons from './components/ArrowButtons';
 import HeaderButtons from './components/HeaderButtons';
 import FooterButtons from './components/FooterButtons';
@@ -23,15 +23,15 @@ import {
 } from '@/app/api/shadowingApi';
 import { vttToCaption, convertTime } from './components/modules';
 import useCaption from './components/useCaption';
+import useCheckDiction from './components/CheckDiction';
 
 const page = ({ params }: { params: { slug: string } }) => {
   const videoId = params.slug;
   const playerRef = useRef<YouTubePlayer>(null);
-  const showCountdownRef = useRef<boolean>(false);
   const [speed, setSpeed] = useState<number>(1);
-  const [countDown, setCountDown] = useState<number>(-1); // 발음체크 시 카운트를 담을 state
+  // const [count, setCount] = useState<number>(-1); // 발음체크 시 카운트를 담을 state
   const [isShowKorCap, setIsShowKorCap] = useState<boolean>(true);
-  const [checkDict, setCheckDict] = useState<boolean>(false);
+  const [isCheckDiction, setIsCheckDiction] = useState<boolean>(false);
   const [state, setState] = useState<stateType>({
     videoUrl: '-',
     videoStart: 0,
@@ -57,7 +57,7 @@ const page = ({ params }: { params: { slug: string } }) => {
     renderCaption,
     findCurrentCaptionIndex,
     searchWord,
-  } = useCaption(videoInfoRef, playerRef, checkDict, isShowKorCap);
+  } = useCaption(videoInfoRef, playerRef, isCheckDiction, isShowKorCap);
 
   useEffect(() => {
     getVideo(videoId).then((data) => {
@@ -141,46 +141,51 @@ const page = ({ params }: { params: { slug: string } }) => {
   };
 
   const checkRepeat = (): void => {
-    const videoInfo = videoInfoRef.current;
-    if (videoInfo) {
-      videoInfo.repeatIndex = videoInfo.currentCapIndex;
-      videoInfo.repeat = !videoInfo.repeat;
+    const info = videoInfoRef.current;
+    if (info) {
+      info.repeatIndex = info.currentCapIndex;
+      info.repeat = !info.repeat;
       setState((prevData) => {
-        return { ...prevData, repeat: videoInfo.repeat };
+        return { ...prevData, repeat: info.repeat };
       });
     }
   };
 
-  const checkDiction = (isCheckDict = false): void => {
-    const videoInfo = videoInfoRef.current;
-    if (isCheckDict && videoInfo.currentCapIndex > -1) {
-      videoInfo.repeatIndex = videoInfo.currentCapIndex;
-      videoInfo.repeat = true;
-      showCountdownRef.current = true;
-      setCountDown(3);
-      setCheckDict(true);
+  const evaluateDiction = (param = false): void => {
+    const info = videoInfoRef.current;
+    if (param && info.currentCapIndex > -1) {
+      console.log(info.currentCapIndex);
+      setIsCheckDiction(true);
+      info.repeatIndex = info.currentCapIndex;
+      info.repeat = true;
       playerRef.current
+        .seekTo(info.engCaption[info.repeatIndex].startTime, true)
         .mute()
-        .seekTo(videoInfo.engCaption[videoInfo.repeatIndex].startTime, true)
         .pauseVideo();
     } else {
-      videoInfo.repeatIndex = null;
-      videoInfo.repeat = false;
+      info.repeatIndex = null;
+      info.repeat = false;
       playerRef.current.playVideo().unMute();
+      setIsCheckDiction(false);
       setState((prevData) => {
         return { ...prevData, repeat: false };
       });
-      setCheckDict(false);
     }
   };
+
+  const { count, renderCheckDiction } = useCheckDiction(
+    playerRef,
+    isCheckDiction,
+    currentCaption?.eng,
+    evaluateDiction,
+  );
 
   return (
     <div className="relative flex flex-col justify-start items-center lg:absolute lg:top-0 lg:left-0 w-full h-full">
       <VideoContainer
         playerRef={playerRef}
         repeat={state.repeat}
-        countDown={countDown}
-        showCountdown={showCountdownRef.current}
+        count={count}
         videoUrl={state.videoUrl}
         videoStart={state.videoStart}
         videoEnd={state.videoEnd}
@@ -189,17 +194,9 @@ const page = ({ params }: { params: { slug: string } }) => {
       <div className="w-full lg:w-[85%] py-5 px-8 max-w-[1024px]">
         <div className="relative w-full h-full rounded-lg bg-white shadow-custom py-6 px-8 flex flex-col lg:flex-row justify-between lg:min-h-[250px]">
           <div className="w-full flex flex-col justify-between h-full">
-            {checkDict && (
-              <CheckDiction
-                playerRef={playerRef}
-                setCountDown={setCountDown}
-                showCountdownRef={showCountdownRef}
-                countDown={countDown}
-                checkDiction={checkDiction}
-                engCaption={currentCaption?.eng}
-              />
-            )}
-            {!checkDict && (
+            {isCheckDiction ? (
+              renderCheckDiction()
+            ) : (
               <>
                 <HeaderButtons
                   speed={speed}
@@ -211,17 +208,18 @@ const page = ({ params }: { params: { slug: string } }) => {
                   prevCaption={prevCaption}
                   nextCaption={nextCaption}
                 />
-                {renderCaption()}
+                <div className="sm:text-base md:text-lg lg:text-xl">
+                  {renderCaption()}
+                </div>
                 <FooterButtons
                   state={state}
                   bookMark={bookMark}
                   checkRepeat={checkRepeat}
-                  checkDiction={checkDiction}
+                  checkDiction={evaluateDiction}
                 />
               </>
             )}
           </div>
-
           {searchWord && (
             <div className="hidden lg:flex flex-col justify-between w-full pl-8 ml-8 border-l">
               <ViewDictionary word={searchWord} />

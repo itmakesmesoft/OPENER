@@ -6,80 +6,104 @@ import {
   PropertyId,
   PronunciationAssessmentConfig,
 } from 'microsoft-cognitiveservices-speech-sdk';
-import Chart from './Chart';
+import Chart from './chart';
 import { AiOutlinePause } from 'react-icons/ai';
 import { BsChevronLeft, BsMic } from 'react-icons/bs';
-import React, { useState, useRef, useEffect, MutableRefObject } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { YouTubePlayer } from 'react-youtube';
 
-const CheckDiction = (props: {
-  playerRef: any;
-  countDown: number;
-  engCaption: string | undefined;
-  showCountdownRef: MutableRefObject<boolean>;
-  setCountDown: (param: number) => void;
-  checkDiction: (param: boolean) => void;
-}) => {
+const useCheckDiction = (
+  playerRef: YouTubePlayer,
+  isCheckDiction: boolean,
+  engCaption: string | undefined,
+  evaluateDiction: (param: boolean) => void,
+) => {
   const [assessmentResult, setAssessmentResult] = useState<any>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
+  // const statusRef = useRef<number>(0); // 0: standby, 1: recording
+  const recognizerRef = useRef<SpeechRecognizer | undefined>();
+  const subscriptionKey = process.env.NEXT_PUBLIC_AZURE_API || '';
+  const serviceRegion = 'eastus';
 
-  const backBtn = () => {
-    props.checkDiction(false);
-    props.showCountdownRef.current = false;
+  const stopRecord = () => {
+    recognizerRef.current?.stopContinuousRecognitionAsync();
+    timer.current && clearInterval(timer.current);
+    timer.current = null;
+    setIsRecording(false);
+    setCount(0);
+    console.log('request : stop record');
   };
 
-  // Cognitive Services 계정 정보 <================================ 숨겨야함
-  const subscriptionKey = process.env.NEXT_PUBLIC_AZURE_API;
-  const serviceRegion = 'eastus';
-  const speechConfig = SpeechConfig.fromSubscription(
-    subscriptionKey!,
-    serviceRegion!,
-  );
-  const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
-  let recognizer: SpeechRecognizer | undefined;
-  const recognizerRef = useRef<SpeechRecognizer | undefined>(recognizer);
-  let timer: any;
-  const standByRecord = () => {
-    // 3초 타이머
+  const closeCheck = () => {
+    evaluateDiction(false);
     setAssessmentResult(undefined);
-    setIsRecording(true);
-    let second = 3;
-    timer = setInterval(() => {
-      second -= 1;
-      props.setCountDown(second);
-      if (!props.showCountdownRef.current) {
-        clearInterval(timer);
-      } else if (second < 1) {
-        Record();
-        props.showCountdownRef.current = false;
-        clearInterval(timer);
-      }
-    }, 1000);
+    stopRecord();
+  };
+
+  const timer = useRef<NodeJS.Timer | null>(null);
+  const [count, setCount] = useState<number>(0);
+
+  const standByRecord = () => {
+    console.log('request : standby');
+    if (!timer.current) {
+      evaluateDiction(true);
+      setIsRecording(true);
+      setCount(3);
+      let time = 3;
+      timer.current = setInterval(() => {
+        time -= 1;
+        setCount(time);
+        if (time === 0) {
+          Record();
+          timer.current && clearInterval(timer.current);
+        }
+      }, 1000);
+    } else {
+      stopRecord();
+    }
   };
 
   useEffect(() => {
-    standByRecord();
+    if (isCheckDiction && !isRecording) {
+      standByRecord();
+      return () => {
+        console.log('response : stopped');
+        stopRecord();
+      };
+    }
+  }, [isCheckDiction]);
+
+  useEffect(() => {
+    // Unmounted 시
     return () => {
-      clearInterval(timer); // timer 종료
-      recognizerRef.current?.stopContinuousRecognitionAsync();
+      console.log('response : unmounted');
+      stopRecord();
     };
   }, []);
 
   const Record = () => {
-    props.playerRef.current.playVideo();
+    console.log('request : start record');
+    playerRef.current.playVideo();
+    const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
     const config = PronunciationAssessmentConfig.fromJSON(
       JSON.stringify({
-        referenceText: props.engCaption,
+        referenceText: engCaption,
         gradingSystem: 'HundredMark',
         granularity: 'Phoneme',
         phonemeAlphabet: 'IPA',
         nBestPhonemeCount: 5,
       }),
     );
-    recognizer = new SpeechRecognizer(speechConfig, audioConfig);
-    config.applyTo(recognizer);
-    recognizerRef.current = recognizer;
 
-    recognizer.recognizing = (s, e) => {
+    const speechConfig = SpeechConfig.fromSubscription(
+      subscriptionKey,
+      serviceRegion,
+    );
+    recognizerRef.current = new SpeechRecognizer(speechConfig, audioConfig);
+    config.applyTo(recognizerRef.current);
+
+    recognizerRef.current.recognizing = (s, e) => {
+      console.log('response : recognizing');
       const list: any = [];
       e.result.text.split(' ').map((word, index) => {
         const info = {
@@ -95,31 +119,29 @@ const CheckDiction = (props: {
         list: list,
       });
     };
-    recognizer.recognized = (s, e) => {
+    recognizerRef.current.recognized = (s, e) => {
+      console.log('response : recognized');
       const res = e.result.properties.getProperty(
         PropertyId.SpeechServiceResponse_JsonResult,
       );
-      if (recognizer) {
+      if (recognizerRef.current) {
         result(JSON.parse(res));
         stopRecord();
       }
     };
-    recognizer.sessionStopped = () => {
-      if (recognizer) {
-        recognizer.close();
-        recognizer = undefined;
+    recognizerRef.current.canceled = () => {
+      stopRecord();
+      alert('Azure API 토큰의 만료로 현재 사용할 수 없는 서비스입니다.');
+    };
+    recognizerRef.current.sessionStopped = () => {
+      if (recognizerRef.current) {
+        recognizerRef.current.close();
+        recognizerRef.current = undefined;
+        console.log('response : sessionStopped');
       }
     };
-    recognizer.startContinuousRecognitionAsync();
-  };
-
-  const stopRecord = () => {
-    if (recognizerRef.current) {
-      recognizerRef.current.stopContinuousRecognitionAsync();
-      setIsRecording(false);
-      props.showCountdownRef.current = false;
-      props.playerRef.current?.playVideo();
-    }
+    recognizerRef.current.startContinuousRecognitionAsync();
+    console.log('request : startContinuousRecognitionAsync');
   };
 
   const checkCommonWords = (script: any, Lexical: any, res: any) => {
@@ -184,27 +206,25 @@ const CheckDiction = (props: {
   };
 
   const result = async (result: any) => {
-    if (props.engCaption && result.RecognitionStatus === 'Success') {
+    if (engCaption && result.RecognitionStatus === 'Success') {
       const res = result.NBest[0];
       const Lexical = res.Lexical.split(' ');
-      const caption = props.engCaption.split(' ');
+      const caption = engCaption.split(' ');
       const [assessment, recognized] = checkCommonWords(caption, Lexical, res);
 
       setAssessmentResult({
         assessment: assessment,
         list: recognized,
       }); // 발음 결과
-    } else if (
-      props.engCaption &&
-      result.RecognitionStatus === 'EndOfDictation'
-    ) {
+    } else if (engCaption && result.RecognitionStatus === 'EndOfDictation') {
       console.log('EndOfDictation');
     }
   };
-  return (
+
+  const renderCheckDiction = () => (
     <div className="relative flex flex-col justify-between h-full">
       <div className="mb-4 min-h-[60px]">
-        <p className="font-bold mb-2">{props.engCaption}</p>
+        <p className="font-bold mb-2">{engCaption}</p>
         <p className="font-semibold">
           {assessmentResult?.list.map((caption: any, index: number) => {
             return (
@@ -258,7 +278,7 @@ const CheckDiction = (props: {
         <div className="w-full">
           <button
             className="rounded-full p-2 bg-[#F0F0F0] hover:bg-[#f7f7f7] active:bg-[#f1f1f1]"
-            onClick={backBtn}
+            onClick={closeCheck}
           >
             <BsChevronLeft />
           </button>
@@ -284,6 +304,7 @@ const CheckDiction = (props: {
       </div>
     </div>
   );
+  return { count, renderCheckDiction };
 };
 
-export default CheckDiction;
+export default useCheckDiction;
