@@ -133,6 +133,7 @@ export interface listInterface {
   isMarked: string;
 }
 export type searchWordType = {
+  index: number;
   word: string;
   meaning: string;
   wordType: string;
