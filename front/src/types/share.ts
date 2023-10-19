@@ -58,17 +58,31 @@ export interface responseInterface {
   message: string;
 }
 
+// 메인페이지 관련
+export interface mainRoadmapInterface {
+  videoId: string;
+  engSentence: string;
+  korSentence: string;
+  status_date: string | null;
+}
+export interface mainRecommendInterface {
+  videoId: string;
+  thumbnailUrl: string | null | undefined;
+  engSentence: string;
+  korSentence: string;
+}
+
 // 로드맵 관련 타입
 export interface stepInterface {
   stepNo: string;
-  themeRoadMapResponseDtoList: themeInterface[] | undefined;
-  authThemeRoadMapResponseDtoList: themeInterface[] | undefined;
+  list: themeInterface[];
+  isLocked?: boolean;
 }
 
 export interface themeInterface {
   stepTheme: string;
-  roadMapResponseDtoList: sentenceInterface[] | undefined;
-  authRoadMapResponseDtoList: sentenceInterface[] | undefined;
+  list: sentenceInterface[];
+  isLocked?: boolean;
 }
 
 export interface sentenceInterface {
@@ -88,20 +102,16 @@ export type stateType = {
   videoStart: number;
   videoEnd: number;
   views: number;
-  marked: boolean;
-  repeat: boolean;
+  marked: boolean; // 북마크 여부
+  repeat: boolean; // 영상 반복 재생 여부
 };
 
 export type videoInfoRef = {
-  videoUrl: string;
-  videoStart: number;
-  videoEnd: number;
   engCaption: scriptInterface[];
   korCaption: scriptInterface[];
   currentCapIndex: number;
   repeatIndex: number | null;
-  marked: boolean; // 북마크 여부
-  repeat: boolean; // 영상 반복 재생 여부
+  repeat: boolean;
 };
 
 export interface scriptInterface {
@@ -133,6 +143,7 @@ export interface listInterface {
   isMarked: string;
 }
 export type searchWordType = {
+  origin: string;
   index: number;
   word: string;
   meaning: string;
