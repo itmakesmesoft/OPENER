@@ -98,9 +98,9 @@ export interface sentenceInterface {
 
 // 쉐도잉 관련 타입
 export type stateType = {
-  videoUrl: string;
-  videoStart: number;
-  videoEnd: number;
+  url: string;
+  start: number;
+  end: number;
   views: number;
   marked: boolean; // 북마크 여부
   repeat: boolean; // 영상 반복 재생 여부

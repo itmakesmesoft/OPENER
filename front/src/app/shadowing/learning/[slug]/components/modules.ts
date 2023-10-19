@@ -11,8 +11,8 @@ export const vttToCaption = (caption: string) => {
       const subtitleText = sub.slice(1).join('\n');
       if (subtitleTime) {
         resArray.push({
-          startTime: convertTime(subtitleTime[0]),
-          endTime: convertTime(subtitleTime[1]),
+          start: convertTime(subtitleTime[0]),
+          end: convertTime(subtitleTime[1]),
           text: subtitleText,
         });
       }

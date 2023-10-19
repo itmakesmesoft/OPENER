@@ -10,7 +10,7 @@ const FooterButtons = (props: {
   state: stateType;
   bookMark: () => void;
   checkRepeat: () => void;
-  checkPron: (param: boolean) => void;
+  openEvaluatePron: () => void;
 }) => {
   const state = props.state;
   return (
@@ -18,9 +18,7 @@ const FooterButtons = (props: {
       <button
         className="rounded-full p-2 bg-[#EFEFEF] hover:bg-[#f7f7f7] active:bg-[#f1f1f1]"
         aria-label="발음 평가하기"
-        onClick={() => {
-          props.checkPron(true);
-        }}
+        onClick={props.openEvaluatePron}
       >
         <BsMic />
       </button>

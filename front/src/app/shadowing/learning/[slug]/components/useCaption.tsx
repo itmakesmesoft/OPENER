@@ -1,9 +1,9 @@
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
-import { captionType, videoInfoRef, searchWordType } from '@/types/share';
+import { captionType, infoRefType, searchWordType } from '@/types/share';
 import { YouTubePlayer } from 'react-youtube';
 
 const useCaption = (
-  videoInfoRef: MutableRefObject<videoInfoRef>,
+  videoInfo: MutableRefObject<infoRefType>,
   playerRef: MutableRefObject<YouTubePlayer>,
   openEvaluatePron: boolean,
   showKorCap: boolean,
@@ -11,7 +11,7 @@ const useCaption = (
   const rAf = useRef<number | null>(null);
   const reg = /[`~!@#$%^&*()_|+\-=?;:",.<>{}[\]\\/]/gim;
   const [caption, setCaption] = useState<captionType>();
-  const [searchWord, setSearchWord] = useState<searchWordType | null>(null); // 단어 검색 시, 단어 정보 담길 변수
+  const [selectedWord, setSelectedWord] = useState<searchWordType | null>(null); // 단어 검색 시, 단어 정보 담길 변수
 
   useEffect(() => {
     ObservePlayer(); // Mount시 Observe 시작
@@ -24,14 +24,14 @@ const useCaption = (
   }, []);
 
   const ObservePlayer = () => {
-    const videoInfo = videoInfoRef.current;
-    if (videoInfo.repeat || openEvaluatePron) {
-      const index = videoInfo.repeatIndex;
+    const info = videoInfo.current;
+    if (info.repeat || openEvaluatePron) {
+      const index = info.repeatIdx;
       if (index !== null) {
         const time = playerRef.current.getCurrentTime();
-        const end = videoInfo.engCaption[index].endTime;
+        const end = info.engCaption[index].end;
         if (time > end)
-          playerRef.current.seekTo(videoInfo.engCaption[index].startTime, true);
+          playerRef.current.seekTo(info.engCaption[index].start, true);
       }
     }
     setCurrentCaption();
@@ -40,10 +40,10 @@ const useCaption = (
 
   const findCurrentCaptionIndex = () => {
     const time = playerRef.current?.getCurrentTime() || 0;
-    if (videoInfoRef.current) {
-      for (let i = 0; i < videoInfoRef.current.engCaption.length; i++) {
-        const start = videoInfoRef.current.engCaption[i].startTime;
-        const end = videoInfoRef.current.engCaption[i].endTime;
+    if (videoInfo.current) {
+      for (let i = 0; i < videoInfo.current.engCaption.length; i++) {
+        const start = videoInfo.current.engCaption[i].start;
+        const end = videoInfo.current.engCaption[i].end;
         if (time >= start && time < end) return i;
       }
     }
@@ -54,14 +54,14 @@ const useCaption = (
   const throttling = useRef<NodeJS.Timeout | null>(null);
 
   const setCurrentCaption = () => {
-    const videoInfo = videoInfoRef.current;
+    const info = videoInfo.current;
     const index = findCurrentCaptionIndex();
-    if (videoInfo && index > -1) {
-      videoInfo.currentCapIndex = index;
-      if (caption?.eng !== videoInfo.engCaption[index].text)
+    if (info && index > -1) {
+      info.currentCapIdx = index;
+      if (caption?.eng !== info.engCaption[index].text)
         setCaption({
-          eng: videoInfo.engCaption[index].text,
-          kor: videoInfo.korCaption[index].text,
+          eng: info.engCaption[index].text,
+          kor: info.korCaption[index].text,
         });
       if (throttling.current) {
         clearTimeout(throttling.current);
@@ -80,20 +80,6 @@ const useCaption = (
     }
   };
 
-  const searchDict = async (origin: string, index: number) => {
-    const word = origin.toLowerCase().replace(reg, '');
-    setSearchWord({
-      word: word,
-      index: index,
-      origin: origin,
-    });
-    // return await dictionaryApi(word).then((res) => {
-    //   if (res.status === 200) {
-    //     setSearchWord(res.data.data);
-    //   }
-    // });
-  };
-
   const renderCaption = () => (
     <div className="mt-2 mb-5 min-h-[60px]">
       <div className="english_subtitle whitespace-pre-wrap text-[1em]">
@@ -102,11 +88,15 @@ const useCaption = (
             <span key={index}>
               <span
                 onClick={() => {
-                  searchDict(word, index);
+                  setSelectedWord({
+                    word: word.toLowerCase().replace(reg, ''),
+                    index: index,
+                    origin: origin,
+                  });
                 }}
                 className={`cursor-pointer hover:bg-[#e8e8e8]${
-                  searchWord?.origin === word &&
-                  searchWord?.index === index &&
+                  selectedWord?.origin === word &&
+                  selectedWord?.index === index &&
                   'text-[#8224ca] font-semibold underline'
                 }`}
               >
@@ -125,8 +115,8 @@ const useCaption = (
     caption,
     renderCaption,
     findCurrentCaptionIndex,
-    searchWord,
-    resetWord: () => setSearchWord(null),
+    selectedWord,
+    resetWord: () => setSelectedWord(null),
   };
 };
 

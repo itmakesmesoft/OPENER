@@ -14,9 +14,10 @@ import { YouTubePlayer } from 'react-youtube';
 
 const useCheckPron = (
   refs: YouTubePlayer,
-  openEvaluatePron: boolean,
+  evaluatePron: boolean,
   engCaption: string | undefined,
-  evaluatePron: (param: boolean) => void,
+  // openEvaluatePron: () => void,
+  closeEvaluatePron: () => void,
 ) => {
   const [assessmentResult, setAssessmentResult] = useState<any>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -34,7 +35,7 @@ const useCheckPron = (
   };
 
   const closeCheck = () => {
-    evaluatePron(false);
+    closeEvaluatePron();
     setAssessmentResult(undefined);
     stopRecord();
   };
@@ -45,7 +46,7 @@ const useCheckPron = (
   const standByRecord = () => {
     console.log('request : standby');
     if (!timer.current) {
-      evaluatePron(true);
+      // openEvaluatePron();
       setIsRecording(true);
       setCount(3);
       let time = 3;
@@ -63,14 +64,14 @@ const useCheckPron = (
   };
 
   useEffect(() => {
-    if (openEvaluatePron && !isRecording) {
+    if (evaluatePron && !isRecording) {
       standByRecord();
       return () => {
         console.log('response : stopped');
         stopRecord();
       };
     }
-  }, [openEvaluatePron]);
+  }, [evaluatePron]);
 
   useEffect(() => {
     // Unmounted 시

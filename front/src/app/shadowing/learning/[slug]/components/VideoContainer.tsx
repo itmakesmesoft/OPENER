@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import YouTube, { YouTubePlayer } from 'react-youtube';
-import { stateType } from '@/types/share';
 
 const VideoContainer = (props: {
-  state: stateType;
   refs: YouTubePlayer;
+  start: number;
+  end: number;
+  url: string;
+  repeat: boolean;
   onReady: () => unknown;
   onEnd: () => void;
 }) => {
@@ -17,8 +19,8 @@ const VideoContainer = (props: {
     width: '640',
     playerVars: {
       loop: 0,
-      start: props.state.videoStart,
-      end: props.state.videoEnd + 1,
+      start: props.start,
+      end: props.end + 1,
       controls: 1, // 컨트롤바(1: 표시, 0: 미표시)
       autoplay: 1, // 자동재생(1: 설정, 0: 취소)
       rel: 0, // 관련 동영상(1: 표시, 0: 미표시)
@@ -27,24 +29,23 @@ const VideoContainer = (props: {
     },
   };
   useEffect(() => {
-    if (props.state.videoUrl !== '-') {
+    if (props.url !== '-') {
       setMounted(true);
     }
-  }, [props.state.videoUrl]);
+  }, [props.url]);
 
   return (
     <div>
       {mounted && (
         <YouTube
-          videoId={props.state.videoUrl}
+          videoId={props.url}
           onReady={(event) => {
             props.refs.current = event.target;
             props.refs.current.playVideo();
             props.onReady(); // 플레이어가 준비 되면 실행
           }}
           onEnd={() => {
-            if (props.state.repeat)
-              props.refs.current.seekTo(props.state.videoStart, true);
+            if (props.repeat) props.refs.current.seekTo(props.start, true);
             else props.onEnd();
             props.refs.current.playVideo();
           }}
