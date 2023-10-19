@@ -35,11 +35,13 @@ const Roadmap = () => {
                 <p className="text-start text-sm">{content.korSentence}</p>
               </div>
               {content.status_date ? (
-                <div className="w-[30px] h-[30px] rounded-full flex justify-center items-center bg-[#FFD600]">
-                  <RiCheckFill size="1.7rem" color="#ffffff" />
+                <div className="p-1 rounded-full bg-[#FFD600]">
+                  <RiCheckFill size="1.3rem" color="#ffffff" />
                 </div>
               ) : (
-                <div className="w-[30px] h-[30px] rounded-full bg-[#F1F1F1]" />
+                <div className="p-1 rounded-full bg-[#F1F1F1]">
+                  <RiCheckFill size="1.3rem" color="#ffffff" />
+                </div>
               )}
             </Link>
           );
