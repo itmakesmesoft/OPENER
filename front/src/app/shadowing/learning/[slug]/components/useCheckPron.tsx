@@ -13,14 +13,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { YouTubePlayer } from 'react-youtube';
 
 const useCheckPron = (
-  playerRef: YouTubePlayer,
-  isCheckPron: boolean,
+  refs: YouTubePlayer,
+  openEvaluatePron: boolean,
   engCaption: string | undefined,
   evaluatePron: (param: boolean) => void,
 ) => {
   const [assessmentResult, setAssessmentResult] = useState<any>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  // const statusRef = useRef<number>(0); // 0: standby, 1: recording
   const recognizerRef = useRef<SpeechRecognizer | undefined>();
   const subscriptionKey = process.env.NEXT_PUBLIC_AZURE_API || '';
   const serviceRegion = 'eastus';
@@ -64,14 +63,14 @@ const useCheckPron = (
   };
 
   useEffect(() => {
-    if (isCheckPron && !isRecording) {
+    if (openEvaluatePron && !isRecording) {
       standByRecord();
       return () => {
         console.log('response : stopped');
         stopRecord();
       };
     }
-  }, [isCheckPron]);
+  }, [openEvaluatePron]);
 
   useEffect(() => {
     // Unmounted 시
@@ -83,7 +82,7 @@ const useCheckPron = (
 
   const Record = () => {
     console.log('request : start record');
-    playerRef.current.playVideo();
+    refs.current.playVideo();
     const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
     const config = PronunciationAssessmentConfig.fromJSON(
       JSON.stringify({
