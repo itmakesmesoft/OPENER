@@ -3,7 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getRoadMapApi } from '../api/shadowingApi';
-import { BiLockAlt } from 'react-icons/bi';
+import {
+  IoLockClosedOutline,
+  IoLockOpen,
+  IoLockOpenOutline,
+} from 'react-icons/io5';
 import { RiCheckFill } from 'react-icons/ri';
 import {
   sentenceInterface,
@@ -71,14 +75,19 @@ const page = () => {
             <div key={index} className="flex flex-row">
               <div className="w-[50px] flex flex-col items-center">
                 {theme.isLocked ? (
-                  <div className="h-[26px] w-[26px] m-[12px] rounded-full flex justify-center items-center bg-[#6713D4]">
-                    <BiLockAlt color="#fff" />
+                  <div className="h-[26px] w-[26px] m-[12px] rounded-full flex justify-center items-center bg-[#c5c5c5]">
+                    <IoLockClosedOutline color="#fff" />
                   </div>
                 ) : (
-                  <div className="h-[26px] w-[26px] m-[12px] rounded-full flex justify-center items-center border-2 border-[#4b4b4b]"></div>
+                  <div className="h-[26px] w-[26px] m-[12px] rounded-full flex justify-center items-center  bg-[#fac100]">
+                    <IoLockOpen color="#fff" />
+                  </div>
                 )}
-
-                <div className="h-[calc(100%-50px)] w-[3px] bg-[#F0F0F0] rounded"></div>
+                <div
+                  className={`h-[calc(100%-50px)] w-[2px] rounded ${
+                    theme.isLocked ? 'bg-[#c5c5c5]' : 'bg-[#fac100]'
+                  }`}
+                ></div>
               </div>
               <div className="w-[calc(100%-60px)]">
                 <p className="text-md sm:text-lg mb-5 mt-[12px] pl-2">
