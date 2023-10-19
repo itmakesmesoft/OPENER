@@ -32,7 +32,7 @@
 | tailwind | 3.3.1 |
 | npm | 8.19.2 |
 | eslint | 8.36.0 |
-| react-redux | 8.0.5 |
+| recoil | 0.7.7 |
 
 ### Backend
 
