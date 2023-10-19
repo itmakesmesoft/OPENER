@@ -221,7 +221,7 @@ const useCheckPron = (
   };
 
   const renderCheckPron = () => (
-    <div className="relative flex flex-col justify-between h-full">
+    <div className="relative flex flex-col justify-between">
       <div className="mb-4 min-h-[60px]">
         <p className="font-bold mb-2">{engCaption}</p>
         <p className="font-semibold">
@@ -251,7 +251,7 @@ const useCheckPron = (
         </p>
       </div>
       <div className="flex flex-col justify-center items-center mb-3">
-        <div className="bg-[#fcfffb] rounded-md border border-[#e5e5e5] py-3 px-2 w-full">
+        <div className="bg-[#fcfcfc] rounded-md border border-[#e5e5e5] py-3 px-2 w-full">
           <p className="text-center font-semibold">발음 평가 결과</p>
           <div className="flex flex-row justify-center items-center">
             <div className="w-[100px] ">
