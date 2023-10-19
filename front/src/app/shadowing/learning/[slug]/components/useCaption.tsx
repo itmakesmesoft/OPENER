@@ -85,9 +85,6 @@ const useCaption = (
     setSearchWord({
       word: word,
       index: index,
-      meaning: '예문',
-      wordType: '단어',
-      level: '쉬움',
       origin: origin,
     });
     // return await dictionaryApi(word).then((res) => {
@@ -124,7 +121,13 @@ const useCaption = (
       </div>
     </div>
   );
-  return { caption, renderCaption, findCurrentCaptionIndex, searchWord };
+  return {
+    caption,
+    renderCaption,
+    findCurrentCaptionIndex,
+    searchWord,
+    resetWord: () => setSearchWord(null),
+  };
 };
 
 export default useCaption;
