@@ -38,8 +38,10 @@ const page = () => {
 
     // 2. 모든 step.isLocked과 theme.isLocked의 기본값을 true로 지정
     newData.forEach((step: stepInterface) => {
-      step.list.forEach((theme: themeInterface) => (theme['isLocked'] = true));
-      step['isLocked'] = true;
+      step.list.forEach((theme: themeInterface) => {
+        return { ...theme, isLocked: true };
+      });
+      return { ...step, isLocked: true };
     });
     return newData;
   };
