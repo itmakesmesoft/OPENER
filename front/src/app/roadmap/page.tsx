@@ -3,11 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getRoadMapApi } from '../api/shadowingApi';
-import {
-  IoLockClosedOutline,
-  IoLockOpen,
-  IoLockOpenOutline,
-} from 'react-icons/io5';
+import { IoLockClosedOutline, IoLockOpen } from 'react-icons/io5';
 import { RiCheckFill } from 'react-icons/ri';
 import {
   sentenceInterface,
@@ -38,10 +34,8 @@ const page = () => {
 
     // 2. 모든 step.isLocked과 theme.isLocked의 기본값을 true로 지정
     newData.forEach((step: stepInterface) => {
-      step.list.forEach((theme: themeInterface) => {
-        return { ...theme, isLocked: true };
-      });
-      return { ...step, isLocked: true };
+      step.list.forEach((theme: themeInterface) => (theme.isLocked = true));
+      step.isLocked = true;
     });
     return newData;
   };
@@ -76,11 +70,12 @@ const page = () => {
           {step.list.map((theme: themeInterface, index: number) => (
             <div key={index} className="flex flex-row">
               <div className="w-[50px] flex flex-col items-center">
-                {theme.isLocked ? (
+                {theme.isLocked && (
                   <div className="h-[26px] w-[26px] m-[12px] rounded-full flex justify-center items-center bg-[#c5c5c5]">
                     <IoLockClosedOutline color="#fff" />
                   </div>
-                ) : (
+                )}
+                {!theme.isLocked && (
                   <div className="h-[26px] w-[26px] m-[12px] rounded-full flex justify-center items-center  bg-[#fac100]">
                     <IoLockOpen color="#fff" />
                   </div>
