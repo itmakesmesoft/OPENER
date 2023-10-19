@@ -27,6 +27,7 @@ const BottomNav = () => {
           <div className="tabmenu-back">
             <button
               type="button"
+              aria-label="뒤로 가기"
               className="tabmenu-back-items"
               onClick={() => {
                 router.back();
@@ -39,7 +40,7 @@ const BottomNav = () => {
               />
             </button>
           </div>
-          <div className="blankbox lg:hidden" />
+          {/* <div className="blankbox lg:hidden" /> */}
         </>
       );
   }
@@ -87,7 +88,7 @@ const BottomNav = () => {
           로드맵
         </Link>
       </div>
-      <div className="blankbox lg:hidden" />
+      {/* <div className="blankbox lg:hidden" /> */}
     </>
   );
 };
