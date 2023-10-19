@@ -2,11 +2,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect } from 'react';
-import useSWRInfinite from 'swr/infinite';
 import { getShadowingList } from '@/app/api/shadowingApi';
-import useUser from '@/app/hooks/userHook';
 import { BsBookmarkPlus, BsBookmarkPlusFill } from 'react-icons/bs';
 import { listInterface } from '@/types/share';
+import useSWRInfinite from 'swr/infinite';
+import useUser from '@/app/hooks/userHook';
 
 const ViewList = (props: { category: string }) => {
   const category = props.category;
@@ -41,10 +41,10 @@ const ViewList = (props: { category: string }) => {
             <div className="flex flex-row w-full items-center justify-between">
               <div className="flex flex-row items-center mr-2 rounded-md min-w-[0px]">
                 <Image
-                  className="w-[100px] sm:w-[130px] lg:w-[160px] h-auto bg-gray-200 flex-none"
-                  src="/images/default.png"
+                  className="w-[100px] sm:w-[130px] lg:w-[160px] h-auto bg-gray-200 flex-none aspect-[3/2] object-cover"
+                  src={content.thumbnailUrl}
                   width="360"
-                  height="202"
+                  height="240"
                   blurDataURL="empty"
                   alt="thumbnail"
                 />
@@ -52,7 +52,7 @@ const ViewList = (props: { category: string }) => {
                   <p className="text-md lg:text-xl font-medium mb-2 truncate">
                     {content.engSentence}
                   </p>
-                  <p className="text-xs lg:text-md truncate">
+                  <p className="text-sm lg:text-md truncate">
                     {content.korSentence}
                   </p>
                 </div>
