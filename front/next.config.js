@@ -28,15 +28,16 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'user-images.githubusercontent.com',
+        hostname: 'storage.googleapis.com',
         port: '',
         pathname: '/**',
       },
       {
+        // youtube 썸네일용
         protocol: 'https',
-        hostname: 'storage.googleapis.com',
+        hostname: 'img.youtube.com',
         port: '',
-        pathname: '/**',
+        pathname: '/vi/**',
       },
     ],
   },
