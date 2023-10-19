@@ -18,7 +18,7 @@ import ViewDictionary from './components/ViewDictionary';
 import { stateType, videoInfoRef } from '@/types/share';
 import { vttToCaption, convertTime } from './components/modules';
 import useCaption from './components/useCaption';
-import useCheckPron from './components/CheckPron';
+import useCheckPron from './components/useCheckPron';
 import styles from './components/player.module.css';
 
 const VideoContainer = dynamic(() => import('./components/VideoContainer'), {
@@ -48,7 +48,7 @@ const page = ({ params }: { params: { slug: string } }) => {
   const videoInfoRef = useRef<videoInfoRef>(defaultVideoInfo); // 영상의 정보를 담을 참조값
   const [state, setState] = useState<stateType>(defaultState); // 가져온 영상 정보를 담는 state
   const [speed, setSpeed] = useState<number>(1); // 영상 재생 속도 => 1 / 0.75 / 0.5
-  const [play, setPlay] = useState(false); // play가 true가 되면, YT플레이어 동적 로드 후 재생
+  const [playerLoad, setPlayerLoad] = useState(false); // play가 true가 되면, YT플레이어 동적 로드 후 재생
   const [showKorCap, setShowKorCap] = useState<boolean>(true); // 한글 자막 켜기 => true/false
   const [openEvaluatePron, setOpenEvaluatePron] = useState<boolean>(false); // 발음 평가 켜기 => true/false
   const {
@@ -158,7 +158,6 @@ const page = ({ params }: { params: { slug: string } }) => {
     const info = videoInfoRef.current;
     if (!playerRef.current) return callback(() => evaluatePron(true));
     if (param && info.currentCapIndex > -1) {
-      console.log(info.currentCapIndex);
       setOpenEvaluatePron(true);
       info.repeatIndex = info.currentCapIndex;
       info.repeat = true;
@@ -177,20 +176,19 @@ const page = ({ params }: { params: { slug: string } }) => {
     }
   };
 
-  const { count, renderCheckPron } = useCheckPron(
+  const { count: countBeforeCheckPron, renderCheckPron } = useCheckPron(
     playerRef,
     openEvaluatePron,
     currentCaption?.eng,
     evaluatePron,
   );
 
-  // 실험 기능
   // 플레이어가 로드되기 전 메서드가 호출될 경우,
   // callbackRef 넣어두고, 플레이어가 로드된 이후에 실행
   const callbackRef = useRef<{ func: (param?: unknown) => void } | null>(null);
   const callback = (func: (param: unknown) => void) => {
     callbackRef.current = { func: (param: unknown) => func(param) };
-    setPlay(true);
+    setPlayerLoad(true); // 플레이어 로드
   };
   //======================================================================
 
@@ -200,7 +198,7 @@ const page = ({ params }: { params: { slug: string } }) => {
         {state.videoUrl !== '-' && (
           <img
             className="absolute top-0 left-0 w-full h-full object-contain bg-black"
-            onClick={() => setPlay(true)}
+            onClick={() => setPlayerLoad(true)}
             src={`https://img.youtube.com/vi/${state.videoUrl}/0.jpg`}
             height="640"
             width="320"
@@ -208,13 +206,17 @@ const page = ({ params }: { params: { slug: string } }) => {
             placeholder="empty"
           />
         )}
-        {play && (
+        {countBeforeCheckPron > 0 && (
+          <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center z-10 bg-[#000000bd]">
+            <p className="text-8xl t text-white">{countBeforeCheckPron}</p>
+          </div>
+        )}
+        {playerLoad && (
           <VideoContainer
-            count={count}
             state={state}
-            playerRef={playerRef}
-            callbackRef={callbackRef}
-            addViewCount={addViewCount}
+            refs={playerRef}
+            onReady={() => callbackRef.current?.func()}
+            onEnd={addViewCount}
           />
         )}
       </div>
