@@ -8,6 +8,7 @@
     format('woff');
   font-weight: normal;
   font-style: normal;
+  font-display: fallback;
 }
 
 body {
@@ -22,7 +23,6 @@ body {
 .content {
   width: 100%;
   min-width: 330px;
-  padding: 0;
 }
 .blankbox {
   width: 100%;
