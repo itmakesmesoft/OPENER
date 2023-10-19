@@ -10,15 +10,16 @@ const FooterButtons = (props: {
   state: stateType;
   bookMark: () => void;
   checkRepeat: () => void;
-  checkDiction: (param: boolean) => void;
+  checkPron: (param: boolean) => void;
 }) => {
   const state = props.state;
   return (
     <div className="flex flex-row justify-between items-center">
       <button
         className="rounded-full p-2 bg-[#EFEFEF] hover:bg-[#f7f7f7] active:bg-[#f1f1f1]"
+        aria-label="발음 평가하기"
         onClick={() => {
-          props.checkDiction(true);
+          props.checkPron(true);
         }}
       >
         <BsMic />
@@ -26,6 +27,7 @@ const FooterButtons = (props: {
       <div>
         <button
           onClick={props.bookMark}
+          aria-label="북마크"
           className={
             state.marked
               ? 'rounded-full p-2 bg-brandP hover:bg-[#8e38ff] active:bg-[#6110ca]'
@@ -40,6 +42,7 @@ const FooterButtons = (props: {
         </button>
         <button
           onClick={props.checkRepeat}
+          aria-label="반복 재생"
           className={
             state.repeat
               ? 'rounded-full p-2 ml-2 bg-brandP hover:bg-[#8e38ff] active:bg-[#6110ca]'

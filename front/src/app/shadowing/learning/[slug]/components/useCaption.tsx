@@ -5,13 +5,13 @@ import { YouTubePlayer } from 'react-youtube';
 const useCaption = (
   videoInfoRef: MutableRefObject<videoInfoRef>,
   playerRef: MutableRefObject<YouTubePlayer>,
-  checkDict: boolean,
-  isShowKorCap: boolean,
+  openEvaluatePron: boolean,
+  showKorCap: boolean,
 ) => {
   const rAf = useRef<number | null>(null);
   const reg = /[`~!@#$%^&*()_|+\-=?;:",.<>{}[\]\\/]/gim;
   const [caption, setCaption] = useState<captionType>();
-  const [searchWord, setSearchWord] = useState<searchWordType | null>(null); // 단어 검색 시, 해당 단어가 담길 상태변수
+  const [searchWord, setSearchWord] = useState<searchWordType | null>(null); // 단어 검색 시, 단어 정보 담길 변수
 
   useEffect(() => {
     ObservePlayer(); // Mount시 Observe 시작
@@ -25,7 +25,7 @@ const useCaption = (
 
   const ObservePlayer = () => {
     const videoInfo = videoInfoRef.current;
-    if (videoInfo.repeat || checkDict) {
+    if (videoInfo.repeat || openEvaluatePron) {
       const index = videoInfo.repeatIndex;
       if (index !== null) {
         const time = playerRef.current.getCurrentTime();
@@ -39,7 +39,7 @@ const useCaption = (
   };
 
   const findCurrentCaptionIndex = () => {
-    const time = playerRef.current?.getCurrentTime();
+    const time = playerRef.current?.getCurrentTime() || 0;
     if (videoInfoRef.current) {
       for (let i = 0; i < videoInfoRef.current.engCaption.length; i++) {
         const start = videoInfoRef.current.engCaption[i].startTime;
@@ -52,15 +52,17 @@ const useCaption = (
 
   // 특정 구간 자막이 없는 경우, 이전 자막 더 보여지도록 스로틀링 적용
   const throttling = useRef<NodeJS.Timeout | null>(null);
+
   const setCurrentCaption = () => {
     const videoInfo = videoInfoRef.current;
     const index = findCurrentCaptionIndex();
     if (videoInfo && index > -1) {
       videoInfo.currentCapIndex = index;
-      setCaption({
-        eng: videoInfo.engCaption[index].text,
-        kor: videoInfo.korCaption[index].text,
-      });
+      if (caption?.eng !== videoInfo.engCaption[index].text)
+        setCaption({
+          eng: videoInfo.engCaption[index].text,
+          kor: videoInfo.korCaption[index].text,
+        });
       if (throttling.current) {
         clearTimeout(throttling.current);
         throttling.current = null;
@@ -78,14 +80,15 @@ const useCaption = (
     }
   };
 
-  const searchDict = async (w: string, idx: number) => {
-    const word = w.toLowerCase().replace(reg, '');
+  const searchDict = async (origin: string, index: number) => {
+    const word = origin.toLowerCase().replace(reg, '');
     setSearchWord({
-      index: idx,
       word: word,
+      index: index,
       meaning: '예문',
       wordType: '단어',
       level: '쉬움',
+      origin: origin,
     });
     // return await dictionaryApi(word).then((res) => {
     //   if (res.status === 200) {
@@ -105,8 +108,8 @@ const useCaption = (
                   searchDict(word, index);
                 }}
                 className={`cursor-pointer hover:bg-[#e8e8e8]${
+                  searchWord?.origin === word &&
                   searchWord?.index === index &&
-                  searchWord.word === word &&
                   'text-[#8224ca] font-semibold underline'
                 }`}
               >
@@ -117,7 +120,7 @@ const useCaption = (
         })}
       </div>
       <div className="korean_subtitle text-[0.8em]">
-        <p className="text-[#787878]">{isShowKorCap && caption?.kor}</p>
+        <p className="text-[#787878]">{showKorCap && caption?.kor}</p>
       </div>
     </div>
   );

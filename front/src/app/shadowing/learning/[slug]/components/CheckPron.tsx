@@ -12,11 +12,11 @@ import { BsChevronLeft, BsMic } from 'react-icons/bs';
 import React, { useState, useRef, useEffect } from 'react';
 import { YouTubePlayer } from 'react-youtube';
 
-const useCheckDiction = (
+const useCheckPron = (
   playerRef: YouTubePlayer,
-  isCheckDiction: boolean,
+  isCheckPron: boolean,
   engCaption: string | undefined,
-  evaluateDiction: (param: boolean) => void,
+  evaluatePron: (param: boolean) => void,
 ) => {
   const [assessmentResult, setAssessmentResult] = useState<any>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -35,7 +35,7 @@ const useCheckDiction = (
   };
 
   const closeCheck = () => {
-    evaluateDiction(false);
+    evaluatePron(false);
     setAssessmentResult(undefined);
     stopRecord();
   };
@@ -46,7 +46,7 @@ const useCheckDiction = (
   const standByRecord = () => {
     console.log('request : standby');
     if (!timer.current) {
-      evaluateDiction(true);
+      evaluatePron(true);
       setIsRecording(true);
       setCount(3);
       let time = 3;
@@ -64,14 +64,14 @@ const useCheckDiction = (
   };
 
   useEffect(() => {
-    if (isCheckDiction && !isRecording) {
+    if (isCheckPron && !isRecording) {
       standByRecord();
       return () => {
         console.log('response : stopped');
         stopRecord();
       };
     }
-  }, [isCheckDiction]);
+  }, [isCheckPron]);
 
   useEffect(() => {
     // Unmounted 시
@@ -221,7 +221,7 @@ const useCheckDiction = (
     }
   };
 
-  const renderCheckDiction = () => (
+  const renderCheckPron = () => (
     <div className="relative flex flex-col justify-between h-full">
       <div className="mb-4 min-h-[60px]">
         <p className="font-bold mb-2">{engCaption}</p>
@@ -279,6 +279,7 @@ const useCheckDiction = (
           <button
             className="rounded-full p-2 bg-[#F0F0F0] hover:bg-[#f7f7f7] active:bg-[#f1f1f1]"
             onClick={closeCheck}
+            aria-label="발음평가 종료"
           >
             <BsChevronLeft />
           </button>
@@ -288,6 +289,7 @@ const useCheckDiction = (
             <button
               onClick={stopRecord}
               className="rounded-full bg-[#F0F0F0] hover:bg-[#f7f7f7] active:bg-[#f1f1f1] p-4"
+              aria-label="녹음 정지"
             >
               <AiOutlinePause size={'2rem'} />
             </button>
@@ -295,6 +297,7 @@ const useCheckDiction = (
             <button
               onClick={standByRecord}
               className="rounded-full bg-[#F0F0F0] hover:bg-[#f7f7f7] active:bg-[#f1f1f1] p-4"
+              aria-label="녹음 시작"
             >
               <BsMic size={'2rem'} />
             </button>
@@ -304,7 +307,7 @@ const useCheckDiction = (
       </div>
     </div>
   );
-  return { count, renderCheckDiction };
+  return { count, renderCheckPron };
 };
 
-export default useCheckDiction;
+export default useCheckPron;

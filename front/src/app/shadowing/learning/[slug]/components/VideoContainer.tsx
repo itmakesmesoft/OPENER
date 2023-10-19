@@ -1,16 +1,15 @@
 'use client';
-import styles from './player.module.css';
+
 import { useEffect, useState } from 'react';
 import YouTube, { YouTubePlayer } from 'react-youtube';
+import { stateType } from '@/types/share';
 
 const VideoContainer = (props: {
-  playerRef: YouTubePlayer;
-  repeat: boolean;
   count: number;
-  videoUrl: string;
-  videoStart: number;
-  videoEnd: number;
+  state: stateType;
+  playerRef: YouTubePlayer;
   addViewCount: () => void;
+  callbackRef: any;
 }) => {
   const [mounted, setMounted] = useState(false);
 
@@ -19,9 +18,9 @@ const VideoContainer = (props: {
     width: '640',
     playerVars: {
       loop: 0,
-      start: props.videoStart,
-      end: props.videoEnd + 1,
-      controls: 0, // 컨트롤바(1: 표시, 0: 미표시)
+      start: props.state.videoStart,
+      end: props.state.videoEnd + 1,
+      controls: 1, // 컨트롤바(1: 표시, 0: 미표시)
       autoplay: 1, // 자동재생(1: 설정, 0: 취소)
       rel: 0, // 관련 동영상(1: 표시, 0: 미표시)
       modestbranding: 1, // 컨트롤 바 youtube 로고(1: 미표시, 0: 표시)
@@ -29,13 +28,13 @@ const VideoContainer = (props: {
     },
   };
   useEffect(() => {
-    if (props.videoUrl !== '-') {
+    if (props.state.videoUrl !== '-') {
       setMounted(true);
     }
-  }, [props.videoUrl]);
+  }, [props.state.videoUrl]);
 
   return (
-    <div className={styles.videoContainer}>
+    <>
       {props.count > 0 && (
         <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center z-10 bg-[#000000bd]">
           <p className="text-8xl t text-white">{props.count}</p>
@@ -43,21 +42,22 @@ const VideoContainer = (props: {
       )}
       {mounted && (
         <YouTube
-          videoId={props.videoUrl}
+          videoId={props.state.videoUrl}
           onReady={(event) => {
             props.playerRef.current = event.target;
             props.playerRef.current.playVideo();
+            props.callbackRef.current?.func(); // 플레이어가 렌더링되기 전에 호출한 메서드 실행
           }}
           onEnd={() => {
-            if (props.repeat)
-              props.playerRef.current.seekTo(props.videoStart, true);
+            if (props.state.repeat)
+              props.playerRef.current.seekTo(props.state.videoStart, true);
             else props.addViewCount();
             props.playerRef.current.playVideo();
           }}
           opts={opts}
         />
       )}
-    </div>
+    </>
   );
 };
 export default VideoContainer;
