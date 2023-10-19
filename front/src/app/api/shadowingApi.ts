@@ -4,6 +4,29 @@ import { getSession } from 'next-auth/react';
 
 const FAST_API_URL = process.env.NEXT_PUBLIC_FAST_API;
 
+// export const getShadowingList = async (url: string) => {
+//   try {
+//     const session = await getSession();
+//     const accessToken = session?.user?.user?.accessToken;
+//     const URL = accessToken ? '/auth/' + url : url;
+//     const res = await shadowingApi.get(URL);
+//     return accessToken
+//       ? res.data.data.authShadowingCategoryDtoList
+//       : res.data.data.shadowingCategoryDtoList;
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
+
+export const getShadowingList = async (url: string) => {
+  try {
+    console.log(url);
+    return await shadowingApi.get(url).then((res) => res.data);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 export const getRoadMapApi = async () => {
   console.log('getroadmap');
   const session = await getSession();
@@ -11,33 +34,37 @@ export const getRoadMapApi = async () => {
   const url = accessToken ? '/auth/roadmap' : '/roadmap';
   try {
     const res = await shadowingApi.get(url);
-    return res.data.data;
+    return res.data;
   } catch (err) {
     console.log(err);
   }
 };
 
 export const getMainRoadMapApi = async () => {
-  // console.log('getMainRoadMapApi');
+  console.log('getMainRoadMapApi');
   const session = await getSession();
   const accessToken = session?.user?.user?.accessToken;
   const url = accessToken ? '/auth/main-roadmap' : '/main-roadmap';
   try {
     const res = await shadowingApi.get(url);
-    return res.data.data;
+    return (
+      res.data.themeRoadMapResponseDto.roadMapResponseDtoList ||
+      res.data.authRoadMapResponseDtoList
+    );
   } catch (err) {
-    // console.log(err);
+    console.log(err);
   }
 };
 
-export const getVideoApi = async (videoId: string) => {
-  console.log('getVideoApi');
+export const getVideoInfoApi = async (videoId: string) => {
+  console.log('Video 조회 api 요청 완료');
   const session = await getSession();
   const accessToken = session?.user?.user?.accessToken;
   const url = accessToken ? '/auth/videos/' + videoId : '/videos/' + videoId;
   try {
     const res = await shadowingApi.get(url);
-    return res.data.data;
+    console.log(res);
+    return res.data;
   } catch (err) {
     console.log(err);
   }
@@ -52,7 +79,7 @@ export const getRecommendListApi = async () => {
 
 export const setCountVideoApi = async (videoId: string) => {
   const session = await getSession();
-  console.log('????');
+  console.log('조회수 증가 api 요청 완료');
   const accessToken = session?.user?.user?.accessToken;
   if (accessToken) {
     return await shadowingApi

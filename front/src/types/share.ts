@@ -106,17 +106,18 @@ export type stateType = {
   repeat: boolean; // 영상 반복 재생 여부
 };
 
-export type videoInfoRef = {
+export type infoRefType = {
   engCaption: scriptInterface[];
   korCaption: scriptInterface[];
-  currentCapIndex: number;
-  repeatIndex: number | null;
+  capLength: number;
+  currentCapIdx: number;
+  repeatIdx: number | null;
   repeat: boolean;
 };
 
 export interface scriptInterface {
-  startTime: number;
-  endTime: number;
+  start: number;
+  end: number;
   text: string;
 }
 
@@ -143,12 +144,9 @@ export interface listInterface {
   isMarked: string;
 }
 export type searchWordType = {
-  origin: string;
-  index: number;
   word: string;
-  meaning: string;
-  wordType: string;
-  level: string;
+  index: number;
+  origin: string;
 };
 
 export type captionType = {
