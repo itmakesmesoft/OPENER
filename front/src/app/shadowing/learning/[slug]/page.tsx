@@ -25,15 +25,15 @@ const VideoContainer = dynamic(() => import('./components/VideoContainer'), {
 });
 
 const defaultState = {
-  videoUrl: '-',
-  videoStart: 0,
-  videoEnd: 0,
+  url: '-',
+  start: 0,
+  end: 0,
   views: 0, // 학습한 횟수
   marked: false,
   repeat: false,
 };
 
-const defaultVideoInfo = {
+const defaultInfo = {
   engCaption: [],
   korCaption: [],
   capLength: 0,
@@ -45,41 +45,46 @@ const defaultVideoInfo = {
 const page = ({ params }: { params: { slug: string } }) => {
   const videoId = params.slug;
   const playerRef = useRef<YouTubePlayer>(null); // 유튜브 플레이어를 참조
-  const infoRef = useRef<infoRefType>(defaultVideoInfo); // 영상의 정보를 담을 참조값
+  const infoRef = useRef<infoRefType>(defaultInfo); // 영상의 정보를 담을 참조값
   const [state, setState] = useState<stateType>(defaultState); // 가져온 영상 정보를 담는 state
   const [speed, setSpeed] = useState<number>(1); // 영상 재생 속도 => 1 / 0.75 / 0.5
   const [playerLoad, setPlayerLoad] = useState(false); // play가 true가 되면, YT플레이어 동적 로드 후 재생
   const [showKorCap, setShowKorCap] = useState<boolean>(true); // 한글 자막 켜기 => true/false
-  const [openEvaluatePron, setOpenEvaluatePron] = useState<boolean>(false); // 발음 평가 켜기 => true/false
+  const [isOpenEvaluation, setIsOpenEvaluation] = useState<boolean>(false); // 발음 평가 켜기 => true/false
   const {
     caption: currentCaption,
     renderCaption,
     findCurrentCaptionIndex,
-    searchWord,
+    selectedWord,
     resetWord,
-  } = useCaption(infoRef, playerRef, openEvaluatePron, showKorCap);
+  } = useCaption(infoRef, playerRef, isOpenEvaluation, showKorCap);
 
   useEffect(() => {
+    // 영상 정보 받기
     getVideoInfo(videoId).then((data) => {
-      const videoStart = convertTime(data.start);
-      const videoEnd = convertTime(data.end);
-      const engCaption = vttToCaption(data.engCaption);
+      // 받아온 영상 정보 변환
+      const start = convertTime(data.start); // hh:mm:ss => number로 변환
+      const end = convertTime(data.end);
+      const engCaption = vttToCaption(data.engCaption); // webVTT => scriptInterface[]로 변환
       const korCaption = vttToCaption(data.korCaption);
+      // 변환된 정보 참조값에 담기
       infoRef.current = {
         ...infoRef.current,
         engCaption: engCaption,
         korCaption: korCaption,
         capLength: engCaption.length,
       };
+      // UI 변경을 위한 상태정보 담기
       setState({
-        videoUrl: data.videoUrl,
-        videoStart: videoStart,
-        videoEnd: videoEnd,
+        url: data.videoUrl,
+        start: start,
+        end: end,
         views: (data.repeat + 1) | 1,
         marked: data.marked,
         repeat: false,
       });
-      setShowKorCap(state.views > 10 ? false : true); // 조회수 10 초과 시 한글 자막 보이지 않도록 함
+      // 한글 자막 표시 여부 초기화
+      setShowKorCap(state.views > 10 ? false : true);
       // setPlay(true);
     });
   }, []);
@@ -116,7 +121,7 @@ const page = ({ params }: { params: { slug: string } }) => {
   const checkRepeat = (): void => {
     const info = infoRef.current;
     if (!info) return;
-    if (!playerRef.current) return callback(checkRepeat);
+    if (!playerRef.current) return doAfterReady(checkRepeat);
     info.repeatIdx = info.currentCapIdx;
     info.repeat = !info.repeat;
     setState((prevData) => {
@@ -128,7 +133,7 @@ const page = ({ params }: { params: { slug: string } }) => {
   const nextCaption = (): void => {
     const info = infoRef.current;
     if (!info) return;
-    if (!playerRef.current) return callback(nextCaption);
+    if (!playerRef.current) return doAfterReady(nextCaption);
     const index = findCurrentCaptionIndex();
     let nextIdx = info.currentCapIdx + 1;
     if (index !== -1 && index + 1 < info.capLength) nextIdx = index + 1;
@@ -140,7 +145,8 @@ const page = ({ params }: { params: { slug: string } }) => {
   const prevCaption = (): void => {
     const info = infoRef.current;
     if (!info) return;
-    if (!playerRef.current) return callback(prevCaption);
+    if (!playerRef.current) return doAfterReady(prevCaption);
+
     const index = findCurrentCaptionIndex();
     let prevIdx = info.currentCapIdx;
     if (index !== -1 && index > 0) prevIdx = index - 1;
@@ -148,70 +154,75 @@ const page = ({ params }: { params: { slug: string } }) => {
     playerRef.current.seekTo(info.engCaption[prevIdx].start, true);
   };
 
-  // evaluatePron : 발음 평가 켜기/끄기 => true: 켜기 / false: 끄기
-  const evaluatePron = (param = false): void => {
+  // openEvaluatePron : 발음 평가 켜기
+  const openEvaluatePron = (): void => {
+    console.log('openEvaluatePron');
     const info = infoRef.current;
-    if (!playerRef.current) return callback(() => evaluatePron(true));
-    if (param && info.currentCapIdx > -1) {
-      setOpenEvaluatePron(true);
-      info.repeatIdx = info.currentCapIdx;
-      info.repeat = true;
-      playerRef.current
-        .seekTo(info.engCaption[info.repeatIdx].start, true)
-        .mute()
-        .pauseVideo();
-    } else {
-      info.repeatIdx = null;
-      info.repeat = false;
-      playerRef.current.playVideo().unMute();
-      setOpenEvaluatePron(false);
-      setState((prevData) => {
-        return { ...prevData, repeat: false };
-      });
-    }
+    if (!playerRef.current) return doAfterReady(openEvaluatePron);
+    if (info.currentCapIdx < 0) return;
+    info.repeatIdx = info.currentCapIdx;
+    info.repeat = true;
+    playerRef.current
+      .seekTo(info.engCaption[info.repeatIdx].start, true)
+      .mute()
+      .pauseVideo();
+    setIsOpenEvaluation(true);
+  };
+
+  // closeEvaluatePron : 발음 평가 끄기
+  const closeEvaluatePron = (): void => {
+    const info = infoRef.current;
+    info.repeatIdx = null;
+    info.repeat = false;
+    playerRef.current.playVideo().unMute();
+    setState((prevData) => {
+      return { ...prevData, repeat: false };
+    });
+    setIsOpenEvaluation(false);
   };
 
   // 발음 평가 커스텀 훅
-  const { count: countBeforeCheckPron, renderCheckPron } = useCheckPron(
+  const { count: countEvaluationPron, renderCheckPron } = useCheckPron(
     playerRef,
-    openEvaluatePron,
+    isOpenEvaluation,
     currentCaption?.eng,
-    evaluatePron,
+    closeEvaluatePron,
   );
 
-  // 플레이어가 로드되기 전 메서드가 호출될 경우,
-  // callbackRef 넣어두고, 플레이어가 로드된 이후에 실행
-  const callbackRef = useRef<{ func: (param?: unknown) => void } | null>(null);
-  const callback = (func: (param: unknown) => void) => {
-    callbackRef.current = { func: (param: unknown) => func(param) };
+  // 플레이어 로드 이전에 메서드 호출 시, callbackFunc에 넣고, 로드 이후에 실행
+  const callbackFunc = useRef<{ func: () => void }>();
+  const doAfterReady = (func: () => void) => {
+    callbackFunc.current = { func: () => func() };
     setPlayerLoad(true); // 플레이어 로드
   };
-  //======================================================================
 
   return (
     <div className="flex flex-col justify-start items-center absolute top-0 left-0 w-screen h-screen pb-[68px] lg:pb-0">
       <div className={styles.videoContainer}>
-        {state.videoUrl !== '-' && (
+        {state.url !== '-' && (
           <img
             className="absolute top-0 left-0 w-full h-full object-contain bg-black"
             onClick={() => setPlayerLoad(true)}
-            src={`https://img.youtube.com/vi/${state.videoUrl}/0.jpg`}
+            src={`https://img.youtube.com/vi/${state.url}/0.jpg`}
             height="640"
             width="320"
             alt="thumbnail"
             placeholder="empty"
           />
         )}
-        {countBeforeCheckPron > 0 && (
+        {countEvaluationPron > 0 && (
           <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center z-10 bg-[#000000bd]">
-            <p className="text-8xl t text-white">{countBeforeCheckPron}</p>
+            <p className="text-8xl t text-white">{countEvaluationPron}</p>
           </div>
         )}
         {playerLoad && (
           <VideoContainer
-            state={state}
             refs={playerRef}
-            onReady={() => callbackRef.current?.func()}
+            start={state.start}
+            end={state.end}
+            url={state.url}
+            repeat={state.repeat}
+            onReady={() => callbackFunc.current?.func()}
             onEnd={addViewCount}
           />
         )}
@@ -219,10 +230,9 @@ const page = ({ params }: { params: { slug: string } }) => {
       <div className="w-full py-5 px-8 overflow-y-auto flex flex-col items-center ">
         <div className="relative w-full lg:w-[85%] rounded-lg bg-white shadow-custom py-6 px-8 flex flex-col md:flex-row justify-between max-w-[1024px]">
           <div className="w-full flex flex-col justify-between h-auto">
-            {openEvaluatePron ? (
-              renderCheckPron()
-            ) : (
-              <>
+            {isOpenEvaluation && renderCheckPron()}
+            {!isOpenEvaluation && (
+              <div>
                 <HeaderButtons
                   speed={speed}
                   showKorCap={showKorCap}
@@ -238,20 +248,20 @@ const page = ({ params }: { params: { slug: string } }) => {
                   state={state}
                   bookMark={bookMark}
                   checkRepeat={checkRepeat}
-                  checkPron={evaluatePron}
+                  openEvaluatePron={openEvaluatePron}
                 />
-              </>
+              </div>
             )}
           </div>
-          {searchWord && (
+          {selectedWord && (
             <div className="hidden md:flex flex-col justify-between w-full pl-8 ml-8 border-l">
-              <ViewDictionary word={searchWord} resetWord={resetWord} />
+              <ViewDictionary word={selectedWord} resetWord={resetWord} />
             </div>
           )}
         </div>
-        {searchWord && (
+        {selectedWord && (
           <div className="md:hidden shadow-custom mt-4 flex flex-col justify-between  py-6 px-8 relative w-full rounded-xl bg-white ">
-            <ViewDictionary word={searchWord} resetWord={resetWord} />
+            <ViewDictionary word={selectedWord} resetWord={resetWord} />
           </div>
         )}
       </div>
