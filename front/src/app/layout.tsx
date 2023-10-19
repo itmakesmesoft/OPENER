@@ -22,7 +22,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
       <body>
         <AuthContext>
           <TopNav />
-          <div className="content h-full">{children}</div>
+          <div className="content h-full p-0 pb-[68px] lg:pb-0">{children}</div>
           <BottomNav />
         </AuthContext>
       </body>
