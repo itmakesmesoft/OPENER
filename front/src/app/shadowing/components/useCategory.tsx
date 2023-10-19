@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import styles from './scrollbar.module.css';
-import 'react-perfect-scrollbar/dist/css/styles.css';
 
 const useCategory = () => {
   const { data: session } = useSession();
