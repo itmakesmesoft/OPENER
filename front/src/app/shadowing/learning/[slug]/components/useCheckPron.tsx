@@ -7,44 +7,37 @@ import {
   PronunciationAssessmentConfig,
 } from 'microsoft-cognitiveservices-speech-sdk';
 import Chart from './chart';
-import { AiOutlinePause } from 'react-icons/ai';
-import { BsChevronLeft, BsMic } from 'react-icons/bs';
 import React, { useState, useRef, useEffect } from 'react';
-import { YouTubePlayer } from 'react-youtube';
 
-const useCheckPron = (
-  refs: YouTubePlayer,
-  evaluatePron: boolean,
-  engCaption: string | undefined,
-  // openEvaluatePron: () => void,
-  closeEvaluatePron: () => void,
-) => {
+const useCheckPron = (engCaption: string | undefined) => {
   const [assessmentResult, setAssessmentResult] = useState<any>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const recognizerRef = useRef<SpeechRecognizer | undefined>();
   const subscriptionKey = process.env.NEXT_PUBLIC_AZURE_API || '';
+  const [isOpenEvaluation, setIsOpenEvaluation] = useState<boolean>(false); // 발음 평가 켜기 => true/false
   const serviceRegion = 'eastus';
 
   const stopRecord = () => {
     recognizerRef.current?.stopContinuousRecognitionAsync();
     timer.current && clearInterval(timer.current);
     timer.current = null;
+    setAssessmentResult(undefined);
     setIsRecording(false);
     setCount(0);
     console.log('request : stop record');
   };
 
-  const closeCheck = () => {
-    closeEvaluatePron();
-    setAssessmentResult(undefined);
-    stopRecord();
-  };
+  // const closeCheck = () => {
+  //   setAssessmentResult(undefined);
+  //   stopRecord();
+  // };
 
   const timer = useRef<NodeJS.Timer | null>(null);
   const [count, setCount] = useState<number>(0);
 
   const standByRecord = () => {
     console.log('request : standby');
+    setIsOpenEvaluation(true);
     if (!timer.current) {
       // openEvaluatePron();
       setIsRecording(true);
@@ -64,17 +57,6 @@ const useCheckPron = (
   };
 
   useEffect(() => {
-    if (evaluatePron && !isRecording) {
-      standByRecord();
-      return () => {
-        console.log('response : stopped');
-        stopRecord();
-      };
-    }
-  }, [evaluatePron]);
-
-  useEffect(() => {
-    // Unmounted 시
     return () => {
       console.log('response : unmounted');
       stopRecord();
@@ -83,7 +65,6 @@ const useCheckPron = (
 
   const Record = () => {
     console.log('request : start record');
-    refs.current.playVideo();
     const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
     const config = PronunciationAssessmentConfig.fromJSON(
       JSON.stringify({
@@ -131,7 +112,7 @@ const useCheckPron = (
     };
     recognizerRef.current.canceled = () => {
       stopRecord();
-      alert('Azure API 토큰의 만료로 현재 사용할 수 없는 서비스입니다.');
+      // alert('Azure API 토큰의 만료로 현재 사용할 수 없는 서비스입니다.');
     };
     recognizerRef.current.sessionStopped = () => {
       if (recognizerRef.current) {
@@ -222,92 +203,71 @@ const useCheckPron = (
   };
 
   const renderCheckPron = () => (
-    <div className="relative flex flex-col justify-between">
-      <div className="mb-4 min-h-[60px]">
-        <p className="font-bold mb-2">{engCaption}</p>
-        <p className="font-semibold">
-          {assessmentResult?.list.map((caption: any, index: number) => {
-            return (
-              <span key={index}>
-                <span>
-                  {caption.isPron ||
-                  caption.pronunciationAssessment?.AccuracyScore > 70 ? (
-                    <span className="text-[#7adf70] cursor-pointer">
-                      {caption.word}
-                    </span>
-                  ) : caption.isPron ||
-                    caption.pronunciationAssessment?.AccuracyScore < 50 ? (
-                    <span className="text-[#ff7142] cursor-pointer">
-                      {caption.word}
-                    </span>
-                  ) : (
-                    <span className="text-[#bbbbbb] cursor-pointer">
-                      {caption.word}
-                    </span>
-                  )}
-                </span>{' '}
-              </span>
-            );
-          })}
-        </p>
-      </div>
-      <div className="flex flex-col justify-center items-center mb-3">
-        <div className="bg-[#fcfcfc] rounded-md border border-[#e5e5e5] py-3 px-2 w-full">
-          <p className="text-center font-semibold">발음 평가 결과</p>
-          <div className="flex flex-row justify-center items-center">
-            <div className="w-[100px] ">
-              <Chart value={assessmentResult?.assessment?.pron} />
-              <p className="text-center text-xs">발음 점수</p>
-            </div>
-            <div className="w-[70px] ">
-              <Chart value={assessmentResult?.assessment?.accuracy} />
-              <p className="text-center text-xs">정확성</p>
-            </div>
-            <div className="w-[70px] ">
-              <Chart value={assessmentResult?.assessment?.fluency} />
-              <p className="text-center text-xs">유창성</p>
-            </div>
-            <div className="w-[70px] ">
-              <Chart value={assessmentResult?.assessment?.completeness} />
-              <p className="text-center text-xs">완성도</p>
-            </div>
+    <div className="mb-4 min-h-[60px]">
+      <p className="font-bold mb-2">{engCaption}</p>
+      <p className="font-semibold">
+        {assessmentResult?.list.map((caption: any, index: number) => {
+          return (
+            <span key={index}>
+              <span>
+                {caption.isPron ||
+                caption.pronunciationAssessment?.AccuracyScore > 70 ? (
+                  <span className="text-[#7adf70] cursor-pointer">
+                    {caption.word}
+                  </span>
+                ) : caption.isPron ||
+                  caption.pronunciationAssessment?.AccuracyScore < 50 ? (
+                  <span className="text-[#ff7142] cursor-pointer">
+                    {caption.word}
+                  </span>
+                ) : (
+                  <span className="text-[#bbbbbb] cursor-pointer">
+                    {caption.word}
+                  </span>
+                )}
+              </span>{' '}
+            </span>
+          );
+        })}
+      </p>
+    </div>
+  );
+  const renderResultPron = () => (
+    <div className="flex flex-col justify-center items-center mb-3">
+      <div className="bg-[#fcfcfc] rounded-md border border-[#e5e5e5] py-3 px-2 w-full">
+        <p className="text-center font-semibold">발음 평가 결과</p>
+        <div className="flex flex-row justify-center items-center">
+          <div className="w-[100px] ">
+            <Chart value={assessmentResult?.assessment?.pron} />
+            <p className="text-center text-xs">발음 점수</p>
+          </div>
+          <div className="w-[70px] ">
+            <Chart value={assessmentResult?.assessment?.accuracy} />
+            <p className="text-center text-xs">정확성</p>
+          </div>
+          <div className="w-[70px] ">
+            <Chart value={assessmentResult?.assessment?.fluency} />
+            <p className="text-center text-xs">유창성</p>
+          </div>
+          <div className="w-[70px] ">
+            <Chart value={assessmentResult?.assessment?.completeness} />
+            <p className="text-center text-xs">완성도</p>
           </div>
         </div>
       </div>
-      <div className="flex flex-row items-end justify-between">
-        <div className="w-full">
-          <button
-            className="rounded-full p-2 bg-[#F0F0F0] hover:bg-[#f7f7f7] active:bg-[#f1f1f1]"
-            onClick={closeCheck}
-            aria-label="발음평가 종료"
-          >
-            <BsChevronLeft />
-          </button>
-        </div>
-        <div className="w-full flex flex-col items-center">
-          {isRecording ? (
-            <button
-              onClick={stopRecord}
-              className="rounded-full bg-[#F0F0F0] hover:bg-[#f7f7f7] active:bg-[#f1f1f1] p-4"
-              aria-label="녹음 정지"
-            >
-              <AiOutlinePause size={'2rem'} />
-            </button>
-          ) : (
-            <button
-              onClick={standByRecord}
-              className="rounded-full bg-[#F0F0F0] hover:bg-[#f7f7f7] active:bg-[#f1f1f1] p-4"
-              aria-label="녹음 시작"
-            >
-              <BsMic size={'2rem'} />
-            </button>
-          )}
-        </div>
-        <div className="w-full" />
-      </div>
     </div>
   );
-  return { count, renderCheckPron };
+
+  return {
+    count,
+    startRecord: standByRecord,
+    stopRecord,
+    isRecording,
+    renderCheckPron,
+    renderResultPron,
+    isOpenEvaluation,
+    setIsOpenEvaluation,
+  };
 };
 
 export default useCheckPron;

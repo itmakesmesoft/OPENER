@@ -98,9 +98,6 @@ export interface sentenceInterface {
 
 // 쉐도잉 관련 타입
 export type stateType = {
-  url: string;
-  start: number;
-  end: number;
   views: number;
   marked: boolean; // 북마크 여부
   repeat: boolean; // 영상 반복 재생 여부
@@ -110,8 +107,7 @@ export type infoRefType = {
   engCaption: scriptInterface[];
   korCaption: scriptInterface[];
   capLength: number;
-  currentCapIdx: number;
-  repeatIdx: number | null;
+  repeatRange: number[] | null;
   repeat: boolean;
 };
 
@@ -122,13 +118,11 @@ export interface scriptInterface {
 }
 
 export type videoInfoType = {
-  start: number;
-  end: number;
-  engCaption: scriptInterface[];
-  korCaption: scriptInterface[];
-  videoUrl: string;
-  marked: boolean | undefined;
-  repeat: boolean;
+  url: string;
+  videoStart: number;
+  videoEnd: number;
+  engCaption: string;
+  korCaption: string;
 };
 
 export interface contentInterface {
@@ -146,7 +140,7 @@ export interface listInterface {
 export type searchWordType = {
   word: string;
   index: number;
-  origin: string;
+  // origin: string;
 };
 
 export type captionType = {
