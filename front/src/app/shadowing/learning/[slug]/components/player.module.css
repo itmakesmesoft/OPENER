@@ -1,55 +1,33 @@
-@media screen and (min-width: 1024px) {
-  .videoContainer {
-    padding: 0;
-    width: 100%;
-    height: calc(100vh / 10 * 7);
-    position: relative;
-  }
-  .videoContainer iframe,
-  .videoContainer object,
-  .videoContainer embed,
-  .videoContainer img {
-    position: absolute;
-    height: calc(100vh / 10 * 7);
-    width: 100%;
-    height: 100%;
-  }
+.videoContainer {
+  padding: 0;
+  height: 70vh;
+  position: relative;
+  width: 100%;
 }
-@media screen and (max-width: 1023px) {
-  .videoContainer {
-    padding: 0;
-    width: 100%;
-    height: calc(100vh / 10 * 6);
-    position: relative;
-  }
-  .videoContainer iframe,
-  .videoContainer object,
-  .videoContainer embed,
-  .videoContainer img {
-    position: absolute;
-    height: calc(100vh / 10 * 7);
-    width: 100%;
-    height: 100%;
-  }
-}
-@media screen and (max-width: 767px) {
-  .videoContainer {
-    position: relative;
-    padding-bottom: 56.25%;
-    padding-top: 30px;
-    overflow: hidden;
-    width: 100%;
-    height: calc(100vw / 3 * 2);
-  }
 
-  .videoContainer iframe,
-  .videoContainer object,
-  .videoContainer embed,
-  .videoContainer img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: calc(100vw / 3 * 2);
+@media screen and (max-width: 1024px) {
+  .videoContainer {
+    height: 60vh;
   }
+}
+@media screen and (max-width: 768px) {
+  .videoContainer {
+    height: 50vh;
+  }
+}
+@media screen and (max-width: 640px) {
+  .videoContainer {
+    height: 40vh;
+  }
+}
+
+.videoContainer iframe,
+.videoContainer object,
+.videoContainer embed,
+.videoContainer img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
