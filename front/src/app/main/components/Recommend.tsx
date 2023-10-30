@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { mainRecommendInterface } from '@/types/share';
 import { getRecommendListApi } from '@/app/api/shadowingApi';
 
-const Recommended = () => {
+const Recommend = () => {
   const [data, setData] = useState<mainRecommendInterface[]>();
   const settings = {
     dots: true,
@@ -82,7 +82,7 @@ const Recommended = () => {
   );
 };
 
-export default Recommended;
+export default Recommend;
 
 // export async function fetchData() {
 //   const BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL;
