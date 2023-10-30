@@ -2,8 +2,8 @@ import Switch from '@mui/material/Switch';
 
 const HeaderButtons = (props: {
   setPlayerSpeed: () => void;
-  setShowKorCap: (param: boolean) => void;
-  showKorCap: boolean;
+  setIsShownKorean: (param: boolean) => void;
+  isShownKorean: boolean;
   speed: number;
 }) => {
   return (
@@ -17,9 +17,9 @@ const HeaderButtons = (props: {
       <div className="flex flex-row items-center">
         <span className="text-sm text-[#787878]">한글 자막</span>
         <Switch
-          checked={props.showKorCap}
+          checked={props.isShownKorean}
           onChange={() => {
-            props.setShowKorCap(!props.showKorCap);
+            props.setIsShownKorean(!props.isShownKorean);
           }}
           inputProps={{ 'aria-label': 'controlled' }}
           color="secondary"

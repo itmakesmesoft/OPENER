@@ -8,8 +8,8 @@ import { stateType } from '@/types/share';
 
 const FooterButtons = (props: {
   state: stateType;
-  bookMark: () => void;
-  checkRepeat: () => void;
+  setBookmark: () => void;
+  setRepeat: () => void;
   openEvaluatePron: () => void;
 }) => {
   const state = props.state;
@@ -24,7 +24,7 @@ const FooterButtons = (props: {
       </button>
       <div>
         <button
-          onClick={props.bookMark}
+          onClick={props.setBookmark}
           aria-label="북마크"
           className={
             state.marked
@@ -39,7 +39,7 @@ const FooterButtons = (props: {
           )}
         </button>
         <button
-          onClick={props.checkRepeat}
+          onClick={props.setRepeat}
           aria-label="반복 재생"
           className={
             state.repeat
