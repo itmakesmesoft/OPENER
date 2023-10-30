@@ -70,7 +70,7 @@ const ViewList = (props: { category: string }) => {
       )}
       <button
         onClick={() => setSize(size + 1)}
-        className="mt-2 border border-[#e3e3e3] p-3 bg-[#f0f0f0] w-full hover:bg-white active:bg-[#f0f0f0] hover:shadow-custom rounded-xl"
+        className="mt-2 border border-[#e3e3e3] p-3 bg-[#f0f0f0] w-full hover:bg-white active:bg-[#f0f0f0] hover:shadow-lg rounded-xl"
       >
         더 보기
       </button>

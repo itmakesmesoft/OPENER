@@ -17,7 +17,7 @@ const Roadmap = () => {
 
   return (
     <div className="w-full h-full">
-      <div className="shadow-custom min-h-[160px] flex flex-col lg:flex-row justify-around rounded-3xl py-5 px-2 lg:py-8 sm:px-10 bg-white">
+      <div className="shadow-lg min-h-[160px] flex flex-col lg:flex-row justify-around rounded-3xl py-5 px-2 lg:py-8 sm:px-10 bg-white">
         <p className="lg:text-xl text-center text-lg font-bold mb-3 w-full flex flex-col justify-center ">
           학습 로드맵
         </p>
