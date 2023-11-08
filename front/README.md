@@ -1,36 +1,19 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+### 리팩토링 목표
 
-## Getting Started
+- 응집도
+    - 같은 목적의 코드는 뭉쳐두기
+- 단일 책임 원칙
+    - 하나의 일을 하는 뚜렷한 이름의 함수 작성
+- 추상화
+    - 핵심 개념을 뽑아내기
+    - 추상화 수준은 비슷하게 구성해야 코드 파악이 쉬움
+- 중첩된 조건문 제거 → 조기 `return`
+- 컴포넌트와 비즈니스 로직 분리
 
-First, run the development server:
+### 성능 개선 목표
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-[http://localhost:3000/api/hello](http://localhost:3000/api/hello) is an endpoint that uses [Route Handlers](https://beta.nextjs.org/docs/routing/route-handlers). This endpoint can be edited in `app/api/hello/route.ts`.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- 이미지 최적화
+- 자막 표시 로직 개선
+- 불필요한 모듈 제거
+- 레이아웃 쉬프트 개선
+- 3rd party 앱 lazy load 및 퍼사드 구현
