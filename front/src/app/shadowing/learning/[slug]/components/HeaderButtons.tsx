@@ -15,7 +15,7 @@ const HeaderButtons = (props: {
         {props.speed}x
       </button>
       <div className="flex flex-row items-center">
-        <span className="text-sm text-[#787878]">한글 자막</span>
+        <span className="text-sm text-[#5f5f5f]">한글 자막</span>
         <Switch
           checked={props.isShownKorean}
           onChange={() => {
