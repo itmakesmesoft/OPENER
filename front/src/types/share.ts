@@ -107,6 +107,7 @@ export type infoRefType = {
   engCaption: scriptInterface[];
   korCaption: scriptInterface[];
   capLength: number;
+  currentCapIndex: number;
   repeatRange: number[] | null;
   repeat: boolean;
 };

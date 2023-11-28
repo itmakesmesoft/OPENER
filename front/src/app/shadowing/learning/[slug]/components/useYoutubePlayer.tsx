@@ -1,6 +1,7 @@
 import { vttToCaption } from './modules';
 import { useEffect, useRef, useState } from 'react';
 import { YouTubeEvent, YouTubePlayer } from 'react-youtube';
+import { FaPlayCircle } from '@react-icons/all-files/fa/FaPlayCircle';
 import {
   videoInfoType,
   captionType,
@@ -50,6 +51,7 @@ const useYoutubePlayer = ({
         engCaption: eng,
         korCaption: kor,
         capLength: videoInfo.engCaption.length,
+        currentCapIndex: 0,
         repeatRange: null,
         repeat: false,
       };
@@ -133,8 +135,10 @@ const useYoutubePlayer = ({
     const current = getCurrentTime() || 0;
     if (!infoRef.current) return null;
     for (let i = 0; i < infoRef.current.capLength; i++) {
-      const time = findCaptionTimeByIndex(i);
-      if (time !== null && current >= time[0] && current < time[1]) return i;
+      const index = getValidCaptionIndex(i + infoRef.current.currentCapIndex);
+      const time = findCaptionTimeByIndex(index);
+      if (time !== null && current >= time[0] && current < time[1])
+        return index;
     }
     return null;
   };
@@ -147,22 +151,34 @@ const useYoutubePlayer = ({
 
   const findPrevCaptionTime = (): number[] | null => {
     const index = findCurrentCaptionIndex();
-    if (index === null || index === undefined) return null;
-    return findCaptionTimeByIndex(index >= 1 ? index - 1 : null);
+    const prevIndex =
+      index === null ? infoRef.current?.currentCapIndex : index - 1;
+    return findCaptionTimeByIndex(getValidCaptionIndex(prevIndex));
   };
 
   const findCurCaptionTime = (): number[] | null => {
     const index = findCurrentCaptionIndex();
-    if (index === null || index === undefined) return null;
     return findCaptionTimeByIndex(index);
   };
 
   const findNextCaptionTime = (): number[] | null => {
     const index = findCurrentCaptionIndex();
-    if (!infoRef.current || index === null || index === undefined) return null;
-    return findCaptionTimeByIndex(
-      index < infoRef.current.capLength - 1 ? index + 1 : null,
-    );
+    const nextIndex =
+      index === null ? infoRef.current?.currentCapIndex : index + 1;
+    return findCaptionTimeByIndex(getValidCaptionIndex(nextIndex));
+  };
+
+  const getValidCaptionIndex = (
+    index: number | null | undefined,
+  ): number | null => {
+    if (infoRef.current === undefined || index === null || index === undefined)
+      return null;
+    if (index >= infoRef.current?.capLength) {
+      return index - infoRef.current.capLength;
+    } else if (index < 0) {
+      return 0;
+    }
+    return index;
   };
 
   // 특정 구간 자막이 없는 경우, 이전 자막 더 보여지도록 타이머 적용
@@ -170,7 +186,8 @@ const useYoutubePlayer = ({
   const setCurrentCaption = () => {
     const info = infoRef.current;
     const index = findCurrentCaptionIndex();
-    if (info && index !== null && index !== undefined) {
+    if (info && index !== null) {
+      info.currentCapIndex = index; // 현재 자막의 인덱스 값 저장
       if (caption?.eng !== info.engCaption[index].text)
         setCaption({
           eng: info.engCaption[index].text,
@@ -181,7 +198,7 @@ const useYoutubePlayer = ({
         timerBeforeCloseCap.current = null;
       }
     } else {
-      // 자막이 끝나더라도 최소 1초는 더 보여지도록 구현
+      // 자막이 끝나더라도 최소 1초는 더 보여지도록 함
       if (!timerBeforeCloseCap.current) {
         timerBeforeCloseCap.current = setTimeout(() => {
           setCaption({
@@ -206,15 +223,23 @@ const useYoutubePlayer = ({
   const renderPlayer = () => (
     <div className={styles.videoContainer}>
       {playerState === 0 && videoInfo && (
-        <Image
-          className="absolute top-0 left-0 w-full h-full object-contain bg-black"
-          onClick={() => setplayerState(1)}
-          src={`https://img.youtube.com/vi/${videoInfo.url}/0.jpg`}
-          height="640"
-          width="320"
-          alt="thumbnail"
-          placeholder="empty"
-        />
+        <div className="w-full h-full flex flex-col justify-center items-center">
+          <button
+            value="재생하기"
+            onClick={() => setplayerState(1)}
+            className="absolute z-10 text-white hover:text-brandY hover:shadow-lg rounded-full"
+          >
+            <FaPlayCircle size="5rem" />
+          </button>
+          <Image
+            className="absolute left-0 top-0 w-full h-full object-contain bg-black"
+            src={`https://img.youtube.com/vi/${videoInfo.url}/0.jpg`}
+            height="640"
+            width="320"
+            alt="thumbnail"
+            loading="eager"
+          />
+        </div>
       )}
       {playerState >= 1 && (
         <YouTube
@@ -250,7 +275,7 @@ const useYoutubePlayer = ({
 
   const renderKorCaption = () => (
     <div className="korean_subtitle text-[0.8em]">
-      <p className="text-[#787878]">{caption?.kor}</p>
+      <p className="text-[#5f5f5f]">{caption?.kor}</p>
     </div>
   );
 
