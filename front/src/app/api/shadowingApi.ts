@@ -3,7 +3,7 @@ import { shadowingApi } from './axiosConfig';
 import { getSession } from 'next-auth/react';
 
 const FAST_API_URL = process.env.NEXT_PUBLIC_FAST_API;
-
+const BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL;
 // export const getShadowingList = async (url: string) => {
 //   try {
 //     const session = await getSession();
@@ -18,13 +18,58 @@ const FAST_API_URL = process.env.NEXT_PUBLIC_FAST_API;
 //   }
 // };
 
-export const getShadowingList = async (url: string) => {
+// export const getShadowingList = async (url: string) => {
+//   try {
+//     console.log(url);
+//     return await shadowingApi.get(url).then((res) => res.data);
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
+
+// export const getRoadMapApi = async () => {
+//   console.log('getroadmap');
+//   const session = await getSession();
+//   const accessToken = session?.user?.user?.accessToken;
+//   const url = accessToken ? '/auth/roadmap' : '/roadmap';
+//   try {
+//     const res = await shadowingApi.get(url);
+//     return res.data;
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
+
+// export const getMainRoadMapApi = async () => {
+//   console.log('getMainRoadMapApi');
+//   const session = await getSession();
+//   const accessToken = session?.user?.user?.accessToken;
+//   const url = accessToken ? '/auth/main-roadmap' : '/main-roadmap';
+//   try {
+//     const res = await shadowingApi.get(url);
+//     return (
+//       res.data.themeRoadMapResponseDto.roadMapResponseDtoList ||
+//       res.data.authRoadMapResponseDtoList
+//     );
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
+const fetchData = async (url: string) => {
   try {
-    console.log(url);
-    return await shadowingApi.get(url).then((res) => res.data);
-  } catch (err) {
-    console.log(err);
+    return await fetch(BASE_URL + 'shadowing-service' + url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }).then((res) => res.json());
+  } catch (error) {
+    console.log(error);
   }
+};
+
+export const getShadowingList = async (url: string) => {
+  return await fetchData(url);
 };
 
 export const getRoadMapApi = async () => {
@@ -32,12 +77,7 @@ export const getRoadMapApi = async () => {
   const session = await getSession();
   const accessToken = session?.user?.user?.accessToken;
   const url = accessToken ? '/auth/roadmap' : '/roadmap';
-  try {
-    const res = await shadowingApi.get(url);
-    return res.data;
-  } catch (err) {
-    console.log(err);
-  }
+  return await fetchData(url);
 };
 
 export const getMainRoadMapApi = async () => {
@@ -45,15 +85,11 @@ export const getMainRoadMapApi = async () => {
   const session = await getSession();
   const accessToken = session?.user?.user?.accessToken;
   const url = accessToken ? '/auth/main-roadmap' : '/main-roadmap';
-  try {
-    const res = await shadowingApi.get(url);
-    return (
-      res.data.themeRoadMapResponseDto.roadMapResponseDtoList ||
-      res.data.authRoadMapResponseDtoList
-    );
-  } catch (err) {
-    console.log(err);
-  }
+  const res = await fetchData(url);
+  return (
+    res.themeRoadMapResponseDto.roadMapResponseDtoList ||
+    res.authRoadMapResponseDtoList
+  );
 };
 
 export const getVideoInfoApi = async (videoId: string) => {
@@ -61,19 +97,12 @@ export const getVideoInfoApi = async (videoId: string) => {
   const session = await getSession();
   const accessToken = session?.user?.user?.accessToken;
   const url = accessToken ? '/auth/videos/' + videoId : '/videos/' + videoId;
-  try {
-    const res = await shadowingApi.get(url);
-    console.log(res);
-    return res.data;
-  } catch (err) {
-    console.log(err);
-  }
+  return await fetchData(url);
 };
 
 export const getRecommendListApi = async () => {
-  return await shadowingApi
-    .get('/main-recommendation')
-    .then((res) => res.data)
+  return await fetchData('/main-recommendation')
+    .then((res) => res)
     .catch((err) => err);
 };
 
