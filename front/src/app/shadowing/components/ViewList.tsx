@@ -1,15 +1,14 @@
 'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect } from 'react';
 import { getShadowingList } from '@/app/api/shadowingApi';
 import { BsBookmarkPlus, BsBookmarkPlusFill } from 'react-icons/bs';
 import { listInterface } from '@/types/share';
 import useSWRInfinite from 'swr/infinite';
 import useUser from '@/app/hooks/userHook';
 
-const ViewList = (props: { category: string }) => {
-  const category = props.category;
+const ViewList = ({ category }: { category: string | undefined }) => {
   const { user } = useUser();
 
   const getKey = (pageIndex: number) => {
@@ -17,7 +16,7 @@ const ViewList = (props: { category: string }) => {
     const end = pageIndex * 10 + 9;
     if (category === '추천' && user.data.nickname) {
       return `/fast/recommendations/${user.data.nickname}/${start}/${end}`;
-    } else if (category === '전체') {
+    } else if (category === '전체' || category === undefined) {
       return `/shadowings?startIndex=${start}&endIndex=${end}`; // SWR 키
     } else {
       return `/shadowings?startIndex=${start}&endIndex=${end}&category=${category}`; // SWR 키
@@ -25,9 +24,6 @@ const ViewList = (props: { category: string }) => {
   };
 
   const { data, size, setSize } = useSWRInfinite(getKey, getShadowingList);
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
 
   return (
     <div className="flex flex-col my-2">
