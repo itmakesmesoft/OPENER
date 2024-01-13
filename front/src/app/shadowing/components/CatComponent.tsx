@@ -15,7 +15,7 @@ const CatComponent = ({ category }: { category: string | undefined }) => {
     '애니메이션',
   ];
 
-  if (category === undefined) category = categories[0];
+  if (category === undefined) category = '전체';
   return (
     <ul
       className={`flex flex-row py-2 overflow-x-auto overflow-y-hidden ${styles.scrollbar_hidden}`}
